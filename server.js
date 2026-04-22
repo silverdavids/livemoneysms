@@ -11,7 +11,10 @@ const { getSessionUserById } = require("./services/auth-service");
 
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: false },
+  cors: {
+    origin: true,
+    credentials: true,
+  },
 });
 let isPolling = false;
 
