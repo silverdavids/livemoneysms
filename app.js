@@ -9,6 +9,10 @@ const messageRoutes = require("./routes/message-routes");
 const deviceRoutes = require("./routes/device-routes");
 const userDeviceRoutes = require("./routes/user-device-routes");
 
+const app = express();
+
+app.set("trust proxy", 1);
+
 const sessionMiddleware = session({
   name: process.env.SESSION_COOKIE_NAME || "live_sms_session",
   secret: process.env.SESSION_SECRET || "replace-me-in-env",
@@ -18,12 +22,10 @@ const sessionMiddleware = session({
   cookie: {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: false,
     maxAge: Number(process.env.SESSION_MAX_AGE_MS || 8 * 60 * 60 * 1000),
   },
 });
-
-const app = express();
 
 app.use(express.json({ limit: "20kb" }));
 app.use(sessionMiddleware);
