@@ -1,0 +1,937 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Live Forwarded SMS</title>
+
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --panel: #ffffff;
+      --panel-soft: #eef6f1;
+      --text: #172033;
+      --muted: #647084;
+      --border: #d9e1ea;
+      --primary: #1f7a5c;
+      --primary-dark: #166148;
+      --accent: #2f6f9f;
+      --danger: #b42318;
+      --warning: #a15c07;
+      --shadow: 0 14px 34px rgba(23, 32, 51, 0.08);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    body {
+      border-top: 5px solid var(--primary);
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .shell {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 44px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: var(--radius);
+      display: grid;
+      place-items: center;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 800;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 24px;
+      line-height: 1.15;
+    }
+
+    .subtle {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .auth-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 410px;
+      gap: 28px;
+      align-items: center;
+      min-height: calc(100vh - 130px);
+    }
+
+    .intro {
+      display: grid;
+      gap: 20px;
+      padding-right: 20px;
+    }
+
+    .intro h2 {
+      max-width: 680px;
+      font-size: 42px;
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    .intro p {
+      max-width: 620px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.65;
+    }
+
+    .trust-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      max-width: 640px;
+    }
+
+    .trust-item {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--panel);
+      padding: 14px;
+    }
+
+    .trust-item strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 15px;
+    }
+
+    .login-panel {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+
+    .login-panel h2 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .form {
+      display: grid;
+      gap: 15px;
+      margin-top: 22px;
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    input {
+      width: 100%;
+      min-height: 46px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(31, 122, 92, 0.16);
+    }
+
+    .btn {
+      min-height: 44px;
+      border: 0;
+      border-radius: var(--radius);
+      padding: 10px 15px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background 0.18s ease, transform 0.18s ease;
+    }
+
+    .btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .btn.secondary {
+      background: #fff;
+      border: 1px solid var(--border);
+      color: var(--text);
+      box-shadow: none;
+    }
+
+    .btn.secondary:hover {
+      background: #f1f5f7;
+    }
+
+    .form-error {
+      display: none;
+      color: var(--danger);
+      background: #fff1f0;
+      border: 1px solid #ffd5d2;
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .dashboard {
+      display: none;
+    }
+
+    .dashboard-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: start;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+      margin-bottom: 20px;
+    }
+
+    .dashboard-title {
+      display: grid;
+      gap: 8px;
+    }
+
+    .dashboard-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--panel);
+      color: var(--muted);
+      padding: 9px 12px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #8a96a8;
+    }
+
+    .status-ok .status-dot {
+      background: #23a559;
+    }
+
+    .status-warn .status-dot {
+      background: #d97706;
+    }
+
+    .status-bad .status-dot {
+      background: #dc2626;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .stat {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--panel);
+      padding: 16px;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .section-head h3 {
+      font-size: 19px;
+    }
+
+    .sms-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sms-card {
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: 0 8px 22px rgba(23, 32, 51, 0.04);
+      padding: 15px 16px;
+      transition: background-color 2s ease, border-color 2s ease, box-shadow 2s ease;
+    }
+
+    .sms-card.flash-new {
+      background: var(--panel-soft);
+      border-color: #23a559;
+      box-shadow: 0 0 0 3px rgba(35, 165, 89, 0.12);
+    }
+
+    .sms-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 9px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #f8fafb;
+      color: var(--muted);
+      padding: 5px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+
+    .sms-body {
+      color: var(--text);
+      font-size: 17px;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+
+    .empty-state {
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--muted);
+      padding: 34px 18px;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .toast-wrap {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: min(360px, calc(100% - 32px));
+    }
+
+    .toast {
+      border-radius: var(--radius);
+      background: #172033;
+      color: #fff;
+      box-shadow: 0 16px 34px rgba(23, 32, 51, 0.22);
+      padding: 13px 14px;
+      line-height: 1.45;
+      font-size: 14px;
+    }
+
+    .toast strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    @media (max-width: 860px) {
+      .auth-layout {
+        grid-template-columns: 1fr;
+        min-height: auto;
+      }
+
+      .intro {
+        padding-right: 0;
+      }
+
+      .intro h2 {
+        font-size: 34px;
+      }
+
+      .dashboard-head {
+        grid-template-columns: 1fr;
+      }
+
+      .dashboard-actions {
+        justify-content: flex-start;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .shell {
+        width: min(100% - 22px, 1120px);
+        padding-top: 18px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+      }
+
+      .brand-mark {
+        width: 38px;
+        height: 38px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      .intro h2 {
+        font-size: 29px;
+      }
+
+      .trust-row {
+        grid-template-columns: 1fr;
+      }
+
+      .dashboard-actions,
+      .dashboard-actions .btn,
+      .dashboard-actions .status-badge {
+        width: 100%;
+      }
+
+      .dashboard-actions {
+        justify-content: stretch;
+      }
+
+      .status-badge {
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">SMS</div>
+        <div>
+          <h1>Live Forwarded SMS</h1>
+          <p class="subtle">Secure access for assigned message streams</p>
+        </div>
+      </div>
+    </header>
+
+    <section id="authView" class="auth-layout">
+      <div class="intro">
+        <h2>Sign in to watch your SMS stream as it arrives.</h2>
+        <p>
+          Your account controls which devices you can view. New messages appear immediately,
+          with sender, provider, device, and received time kept together.
+        </p>
+
+        <div class="trust-row">
+          <div class="trust-item">
+            <strong>Private</strong>
+            <span class="subtle">Only assigned devices are sent to your browser.</span>
+          </div>
+          <div class="trust-item">
+            <strong>Live</strong>
+            <span class="subtle">Socket updates start after sign-in.</span>
+          </div>
+          <div class="trust-item">
+            <strong>Clear</strong>
+            <span class="subtle">Recent and incoming messages stay in one timeline.</span>
+          </div>
+        </div>
+      </div>
+
+      <form id="loginForm" class="login-panel">
+        <h2>Welcome back</h2>
+        <p class="subtle">Use your dashboard account to continue.</p>
+
+        <div class="form">
+          <div id="loginError" class="form-error"></div>
+
+          <label>
+            Username
+            <input id="username" name="username" autocomplete="username" required />
+          </label>
+
+          <label>
+            Password
+            <input id="password" name="password" type="password" autocomplete="current-password" required />
+          </label>
+
+          <button id="loginButton" class="btn" type="submit">Sign In</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="dashboardView" class="dashboard">
+      <div class="dashboard-head">
+        <div class="dashboard-title">
+          <h2>Recent Messages</h2>
+          <p id="welcomeText" class="subtle">Newest messages appear first.</p>
+        </div>
+
+        <div class="dashboard-actions">
+          <button id="enableNotifications" class="btn secondary">Enable Alerts</button>
+          <div id="notifStatus" class="status-badge">
+            <span class="status-dot"></span>
+            <span>Notifications unavailable</span>
+          </div>
+          <button id="logoutButton" class="btn secondary">Sign Out</button>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">Messages Loaded</div>
+          <div id="totalSms" class="stat-value">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Connection</div>
+          <div id="socketState" class="stat-value">Offline</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Devices</div>
+          <div id="deviceScope" class="stat-value">-</div>
+        </div>
+      </div>
+
+      <div class="section-head">
+        <div>
+          <h3>Message Timeline</h3>
+          <p class="subtle">Live updates are filtered by your account.</p>
+        </div>
+      </div>
+
+      <div id="list" class="sms-list">
+        <div id="emptyState" class="empty-state">Waiting for messages...</div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toastWrap" class="toast-wrap"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const authView = document.getElementById("authView");
+    const dashboardView = document.getElementById("dashboardView");
+    const loginForm = document.getElementById("loginForm");
+    const loginButton = document.getElementById("loginButton");
+    const loginError = document.getElementById("loginError");
+    const usernameInput = document.getElementById("username");
+    const passwordInput = document.getElementById("password");
+    const list = document.getElementById("list");
+    const statusEl = document.getElementById("notifStatus");
+    const totalSmsEl = document.getElementById("totalSms");
+    const socketStateEl = document.getElementById("socketState");
+    const deviceScopeEl = document.getElementById("deviceScope");
+    const welcomeText = document.getElementById("welcomeText");
+    const toastWrap = document.getElementById("toastWrap");
+
+    const seen = new Set();
+    let socket = null;
+    let initialLoadDone = false;
+    let audioContext = null;
+    let audioAlertsReady = false;
+    let audioBlockedToastShown = false;
+
+    boot();
+
+    async function boot() {
+      refreshNotifStatus();
+
+      try {
+        const response = await fetch("/api/me", { credentials: "same-origin" });
+        if (!response.ok) {
+          showLogin();
+          return;
+        }
+
+        const data = await response.json();
+        showDashboard(data.user);
+      } catch {
+        showLogin();
+      }
+    }
+
+    loginForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      unlockAudioAlerts();
+      setLoginError("");
+      loginButton.disabled = true;
+      loginButton.textContent = "Signing In...";
+
+      try {
+        const response = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({
+            username: usernameInput.value,
+            password: passwordInput.value
+          })
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          setLoginError(data.error || "Sign in failed.");
+          return;
+        }
+
+        passwordInput.value = "";
+        showDashboard(data.user);
+      } catch {
+        setLoginError("Could not reach the server.");
+      } finally {
+        loginButton.disabled = false;
+        loginButton.textContent = "Sign In";
+      }
+    });
+
+    document.getElementById("logoutButton").addEventListener("click", async () => {
+      await fetch("/api/logout", {
+        method: "POST",
+        credentials: "same-origin"
+      }).catch(() => {});
+
+      if (socket) {
+        socket.disconnect();
+        socket = null;
+      }
+
+      showLogin();
+    });
+
+    document.getElementById("enableNotifications").addEventListener("click", async () => {
+      const audioReady = await unlockAudioAlerts(true);
+
+      if (!("Notification" in window)) {
+        showToast("Audio Alerts", audioReady ? "Sound alerts are ready for new SMS." : "Sound alerts could not be enabled.");
+        return;
+      }
+
+      const permission = await Notification.requestPermission();
+      refreshNotifStatus();
+
+      if (permission === "granted") {
+        new Notification("Notifications enabled", {
+          body: "You will now receive alerts for new SMS."
+        });
+        showToast("Alerts Enabled", audioReady ? "Sound and browser alerts are ready for new SMS." : "Browser alerts are ready. Sound may need another click.");
+      } else {
+        showToast("Alerts Partly Enabled", audioReady ? `Sound alerts are ready. Browser notifications: ${permission}` : `Current status: ${permission}`);
+      }
+    });
+
+    function showLogin() {
+      authView.style.display = "grid";
+      dashboardView.style.display = "none";
+      resetMessages();
+      setSocketState("Offline", "bad");
+      usernameInput.focus();
+    }
+
+    function showDashboard(user) {
+      authView.style.display = "none";
+      dashboardView.style.display = "block";
+      welcomeText.textContent = `Signed in as ${user.name || user.username}. Newest messages appear first.`;
+      deviceScopeEl.textContent = user.canViewAll ? "All" : (user.deviceIds || []).join(", ");
+      resetMessages();
+      connectSocket();
+    }
+
+    function connectSocket() {
+      if (socket) socket.disconnect();
+
+      setSocketState("Connecting", "warn");
+      socket = io({ withCredentials: true });
+
+      socket.on("connect", () => {
+        setSocketState("Connected", "ok");
+      });
+
+      socket.on("disconnect", () => {
+        setSocketState("Offline", "bad");
+      });
+
+      socket.on("connect_error", (error) => {
+        setSocketState("Auth Error", "warn");
+        showToast("Connection", error.message || "Could not connect to the live stream.");
+      });
+
+      socket.on("load_error", (message) => {
+        showToast("Messages", message || "Could not load messages.");
+      });
+
+      socket.on("initial_sms", (rows) => {
+        resetMessages();
+
+        for (const row of rows) {
+          addRow(row, false, false);
+        }
+
+        updateTotal();
+        initialLoadDone = true;
+      });
+
+      socket.on("new_sms", (rows) => {
+        for (const row of rows) {
+          const isNew = !seen.has(row.ForwardedSmsId);
+          addRow(row, true, isNew);
+
+          if (initialLoadDone && isNew) {
+            playSmsAlert();
+            notifySms(row);
+            showToast("New SMS Received", `${row.ProviderHint || "Unknown"} | ${row.From || "Unknown sender"}`);
+          }
+        }
+
+        updateTotal();
+      });
+    }
+
+    function resetMessages() {
+      seen.clear();
+      initialLoadDone = false;
+      list.innerHTML = `<div id="emptyState" class="empty-state">Waiting for messages...</div>`;
+      updateTotal();
+    }
+
+    function updateTotal() {
+      totalSmsEl.textContent = seen.size;
+      const emptyState = document.getElementById("emptyState");
+      if (emptyState) emptyState.style.display = seen.size > 0 ? "none" : "block";
+    }
+
+    function setSocketState(label, status) {
+      socketStateEl.textContent = label;
+      socketStateEl.style.color = status === "ok" ? "#1f7a5c" : status === "warn" ? "#a15c07" : "#b42318";
+    }
+
+    function setLoginError(message) {
+      loginError.textContent = message;
+      loginError.style.display = message ? "block" : "none";
+    }
+
+    function refreshNotifStatus() {
+      if (!("Notification" in window)) {
+        statusEl.className = "status-badge status-warn";
+        statusEl.innerHTML = `<span class="status-dot"></span><span>Notifications unsupported</span>`;
+        return;
+      }
+
+      const permission = Notification.permission;
+      let className = "status-badge";
+      if (permission === "granted") className += " status-ok";
+      else if (permission === "denied") className += " status-bad";
+      else className += " status-warn";
+
+      statusEl.className = className;
+      statusEl.innerHTML = `<span class="status-dot"></span><span>Notifications: ${permission}</span>`;
+    }
+
+    function notifySms(row) {
+      if (!("Notification" in window)) return;
+      if (Notification.permission !== "granted") return;
+
+      new Notification("New SMS received", {
+        body: `${row.ProviderHint || ""} | ${row.From || ""}\n${(row.Body || "").slice(0, 120)}`
+      });
+    }
+
+    async function unlockAudioAlerts(preview = false) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return false;
+
+      if (!audioContext) {
+        audioContext = new AudioContext();
+      }
+
+      try {
+        if (audioContext.state === "suspended") {
+          await audioContext.resume();
+        }
+
+        audioAlertsReady = audioContext.state === "running";
+        if (audioAlertsReady && preview) {
+          playSmsAlert(0.35);
+        }
+
+        return audioAlertsReady;
+      } catch {
+        audioAlertsReady = false;
+        return false;
+      }
+    }
+
+    function playSmsAlert(volume = 0.55) {
+      if (!audioAlertsReady || !audioContext) {
+        if (!audioBlockedToastShown) {
+          audioBlockedToastShown = true;
+          showToast("Audio Alert", "Click Enable Alerts once to allow sound.");
+        }
+        return;
+      }
+
+      const now = audioContext.currentTime;
+      playTone(now, 880, 0.13, volume);
+      playTone(now + 0.16, 1175, 0.18, volume);
+    }
+
+    function playTone(startTime, frequency, duration, volume) {
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(frequency, startTime);
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.exponentialRampToValueAtTime(volume, startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+      oscillator.connect(gain);
+      gain.connect(audioContext.destination);
+      oscillator.start(startTime);
+      oscillator.stop(startTime + duration + 0.03);
+    }
+
+    function addRow(row, prepend = true, markAsNew = false) {
+      if (!row || seen.has(row.ForwardedSmsId)) return;
+      seen.add(row.ForwardedSmsId);
+
+      const div = document.createElement("div");
+      div.className = "sms-card";
+
+      div.innerHTML = `
+        <div class="sms-meta">
+          <span class="pill">${escapeHtml(formatDate(row.CreatedOnUtc))}</span>
+          <span class="pill">${escapeHtml(row.ProviderHint || "Unknown Provider")}</span>
+          <span class="pill">${escapeHtml(row.From || "Unknown Sender")}</span>
+          <span class="pill">device=${escapeHtml(row.DeviceId || "N/A")}</span>
+        </div>
+        <div class="sms-body">${escapeHtml(row.Body || "")}</div>
+      `;
+
+      if (prepend) {
+        list.prepend(div);
+      } else {
+        list.appendChild(div);
+      }
+
+      if (markAsNew) {
+        window.setTimeout(() => {
+          div.classList.add("flash-new");
+          window.setTimeout(() => div.classList.remove("flash-new"), 3000);
+        }, 50);
+      }
+    }
+
+    function showToast(title, message) {
+      const div = document.createElement("div");
+      div.className = "toast";
+      div.innerHTML = `
+        <strong>${escapeHtml(title)}</strong>
+        <span>${escapeHtml(message)}</span>
+      `;
+      toastWrap.appendChild(div);
+
+      window.setTimeout(() => {
+        div.style.opacity = "0";
+        div.style.transform = "translateY(-4px)";
+        div.style.transition = "0.2s ease";
+        window.setTimeout(() => div.remove(), 220);
+      }, 3200);
+    }
+
+    function formatDate(value) {
+      if (!value) return "";
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (match) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[match]));
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+@baseUrl = http://127.0.0.1:3000
+@contentType = application/json
+
+###
+# Log in
+POST {{baseUrl}}/api/login
+Content-Type: {{contentType}}
+
+{
+  "username": "admin",
+  "password": "pwd123"
+}
+
+###
+# Current session user
+GET {{baseUrl}}/api/me
+
+###
+# Recent messages for the logged-in user
+GET {{baseUrl}}/api/messages?top=50
+
+###
+# Devices visible to the logged-in user
+GET {{baseUrl}}/api/devices
+
+###
+# Assign a device to a user
+# Requires an authenticated user with CanViewAllDevices = 1
+POST {{baseUrl}}/api/user-devices
+Content-Type: {{contentType}}
+
+{
+  "userId": "558D4987-BC73-4AA6-894D-8CA80F944D7E",
+  "deviceId": "0a0d88af8c602c19",
+  "isActive": true
+}
+
+###
+# Log out
+POST {{baseUrl}}/api/logout

@@ -1,0 +1,50 @@
+const express = require("express");
+const session = require("express-session");
+const path = require("path");
+
+require("dotenv").config({ quiet: true });
+
+const authRoutes = require("./routes/auth-routes");
+const messageRoutes = require("./routes/message-routes");
+const deviceRoutes = require("./routes/device-routes");
+const userDeviceRoutes = require("./routes/user-device-routes");
+
+const sessionMiddleware = session({
+  name: process.env.SESSION_COOKIE_NAME || "live_sms_session",
+  secret: process.env.SESSION_SECRET || "replace-me-in-env",
+  resave: false,
+  saveUninitialized: false,
+  rolling: true,
+  cookie: {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: Number(process.env.SESSION_MAX_AGE_MS || 8 * 60 * 60 * 1000),
+  },
+});
+
+const app = express();
+
+app.use(express.json({ limit: "20kb" }));
+app.use(sessionMiddleware);
+
+app.use("/api", authRoutes);
+app.use("/api/messages", messageRoutes);
+app.use("/api/devices", deviceRoutes);
+app.use("/api/user-devices", userDeviceRoutes);
+
+app.use(express.static(path.join(__dirname, "public")));
+
+app.use((err, req, res, next) => {
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  console.error("request error:", err);
+  return res.status(500).json({ error: "Internal server error" });
+});
+
+module.exports = {
+  app,
+  sessionMiddleware,
+};
