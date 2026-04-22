@@ -2,9 +2,10 @@ const sql = require("mssql");
 
 const config = {
   user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  server: process.env.DB_HOST,
+  password: process.env.DB_PASSWORD,
+  server: process.env.DB_SERVER,
   database: process.env.DB_NAME,
+  port: Number(process.env.DB_PORT || 1433),
   options: {
     encrypt: process.env.DB_ENCRYPT === "true",
     trustServerCertificate: process.env.DB_TRUST_SERVER_CERTIFICATE !== "false",
@@ -20,17 +21,19 @@ let poolPromise;
 
 function getPool() {
   if (!poolPromise) {
-    poolPromise = sql.connect(config).then((pool) => {
-      pool.on("error", (error) => {
-        console.error("DB pool error:", error);
+    poolPromise = sql.connect(config)
+      .then((pool) => {
+        pool.on("error", (error) => {
+          console.error("DB pool error:", error);
+          poolPromise = null;
+        });
+        console.log("DB connected");
+        return pool;
+      })
+      .catch((error) => {
         poolPromise = null;
+        throw error;
       });
-      console.log("DB connected");
-      return pool;
-    }).catch((error) => {
-      poolPromise = null;
-      throw error;
-    });
   }
 
   return poolPromise;
