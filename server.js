@@ -94,8 +94,10 @@ async function start() {
   }, 1000);
 
   const port = Number(process.env.PORT || 3000);
-  server.listen(port, () => {
-    console.log(`Web running: http://localhost:${port}`);
+  const host = "0.0.0.0";
+
+  server.listen(port, host, () => {
+    console.log(`Web running: http://${host}:${port}`);
   });
 }
 
