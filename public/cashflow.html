@@ -1,0 +1,1231 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mobile Money Cashflow</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --panel: #ffffff;
+      --panel-soft: #eef6f1;
+      --text: #172033;
+      --muted: #647084;
+      --border: #d9e1ea;
+      --primary: #1f7a5c;
+      --primary-dark: #166148;
+      --accent: #2f6f9f;
+      --danger: #b42318;
+      --warning: #a15c07;
+      --warning-soft: #fff5e8;
+      --success-soft: #edf9f0;
+      --neutral-soft: #eff6ff;
+      --shadow: 0 14px 34px rgba(23, 32, 51, 0.08);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    body {
+      border-top: 5px solid var(--primary);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .shell {
+      width: min(1240px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 18px 0 24px;
+    }
+
+    .topbar,
+    .page-head,
+    .filters-row,
+    .table-head,
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .topbar {
+      margin-bottom: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius);
+      display: grid;
+      place-items: center;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 800;
+      flex: 0 0 auto;
+    }
+
+    h1,
+    h2,
+    h3,
+    p,
+    summary {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 22px;
+      line-height: 1.1;
+    }
+
+    h2 {
+      font-size: 18px;
+      line-height: 1.15;
+    }
+
+    h3 {
+      font-size: 15px;
+    }
+
+    .subtle {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .nav-links,
+    .head-actions,
+    .status-line,
+    .quick-actions,
+    .pager-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .nav-link,
+    .btn,
+    .status-chip,
+    .meta-chip {
+      min-height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    .nav-link,
+    .btn {
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .nav-link.active,
+    .btn.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .btn.primary:hover {
+      background: var(--primary-dark);
+      border-color: var(--primary-dark);
+    }
+
+    .nav-link:hover,
+    .btn:hover {
+      background: #f1f5f7;
+    }
+
+    .btn.primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .status-chip.live {
+      color: #156c41;
+      background: var(--success-soft);
+      border-color: #bde3cb;
+      font-weight: 800;
+    }
+
+    .status-chip.refreshing {
+      color: var(--accent);
+      background: var(--neutral-soft);
+      border-color: #c7dbff;
+      font-weight: 800;
+    }
+
+    .status-chip.paused {
+      color: var(--warning);
+      background: var(--warning-soft);
+      border-color: #f1cf9a;
+      font-weight: 800;
+    }
+
+    .status-chip.error {
+      color: var(--danger);
+      background: #fff1f0;
+      border-color: #ffd5d2;
+      font-weight: 800;
+    }
+
+    .meta-chip {
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .page-card,
+    .filters-card,
+    .table-card,
+    .summary-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .page-card {
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+
+    .page-head {
+      align-items: flex-start;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .summary-card {
+      padding: 12px 14px;
+    }
+
+    .summary-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .summary-value {
+      font-size: 21px;
+      font-weight: 800;
+      line-height: 1.1;
+      overflow-wrap: anywhere;
+    }
+
+    .filters-card {
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+
+    .filters-row {
+      align-items: end;
+      flex-wrap: wrap;
+    }
+
+    .quick-filters {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+      flex: 1 1 760px;
+    }
+
+    .advanced-filters {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+
+    label {
+      display: grid;
+      gap: 5px;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-height: 38px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 10px;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(31, 122, 92, 0.16);
+    }
+
+    details {
+      margin-top: 8px;
+    }
+
+    summary {
+      cursor: pointer;
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 13px;
+      list-style: none;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .table-card {
+      overflow: hidden;
+    }
+
+    .table-head {
+      padding: 12px 14px 0;
+      align-items: end;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      max-height: calc(100vh - 280px);
+      min-height: 320px;
+      padding: 10px 14px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1180px;
+    }
+
+    th,
+    td {
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+      font-size: 13px;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      background: #fbfcfd;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    tbody tr {
+      transition: background-color 1.8s ease, box-shadow 1.8s ease;
+    }
+
+    tbody tr.highlight-new {
+      background: var(--panel-soft);
+      box-shadow: inset 3px 0 0 #23a559;
+    }
+
+    .amount {
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border-radius: var(--radius);
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 800;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .badge.in {
+      color: #156c41;
+      background: var(--success-soft);
+      border-color: #bde3cb;
+    }
+
+    .badge.out {
+      color: var(--warning);
+      background: var(--warning-soft);
+      border-color: #f1cf9a;
+    }
+
+    .badge.system {
+      color: var(--accent);
+      background: var(--neutral-soft);
+      border-color: #c7dbff;
+    }
+
+    .badge.neutral {
+      color: var(--muted);
+      background: #f4f7fa;
+      border-color: var(--border);
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .counterparty {
+      display: grid;
+      gap: 2px;
+    }
+
+    .sms-toggle {
+      min-height: 30px;
+      padding: 5px 10px;
+      white-space: nowrap;
+    }
+
+    .raw-row {
+      display: none;
+      background: #fbfcfd;
+    }
+
+    .raw-row.open {
+      display: table-row;
+    }
+
+    .raw-body {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      background: #172033;
+      color: #f8fafc;
+      border-radius: var(--radius);
+      padding: 12px;
+    }
+
+    .empty-state {
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--muted);
+      padding: 24px 16px;
+      text-align: center;
+      line-height: 1.5;
+      margin: 10px 14px 0;
+    }
+
+    .pagination {
+      padding: 10px 14px 14px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 1100px) {
+      .summary-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .quick-filters {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 840px) {
+      .shell {
+        width: min(100% - 18px, 1240px);
+        padding-top: 14px;
+      }
+
+      .topbar,
+      .page-head,
+      .table-head,
+      .pagination {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .quick-filters,
+      .advanced-filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .nav-links,
+      .head-actions,
+      .status-line,
+      .quick-actions,
+      .pager-buttons {
+        width: 100%;
+      }
+
+      .nav-link,
+      .btn,
+      .status-chip,
+      .meta-chip {
+        width: 100%;
+      }
+
+      .table-wrap {
+        max-height: calc(100vh - 330px);
+      }
+    }
+
+    @media (max-width: 560px) {
+      .summary-grid,
+      .quick-filters,
+      .advanced-filters {
+        grid-template-columns: 1fr;
+      }
+
+      .brand-mark {
+        width: 34px;
+        height: 34px;
+      }
+
+      h1 {
+        font-size: 19px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">SMS</div>
+        <div>
+          <h1>Mobile Money Cashflow</h1>
+          <p class="subtle">Operational cashflow view for collections, payments, and general reporting.</p>
+        </div>
+      </div>
+
+      <nav class="nav-links">
+        <a class="nav-link" href="/">Live SMS</a>
+        <a class="nav-link active" href="/cashflow">Cashflow</a>
+      </nav>
+    </header>
+
+    <section class="page-card">
+      <div class="page-head">
+        <div>
+          <h2>Cashflow Dashboard</h2>
+          <p id="welcomeText" class="subtle">Loading your mobile money transactions...</p>
+        </div>
+
+        <div class="head-actions">
+          <div class="status-line">
+            <div id="liveState" class="status-chip paused">Paused</div>
+            <div id="lastUpdated" class="meta-chip">Last updated: -</div>
+            <div id="statusMessage" class="meta-chip">Waiting for first refresh</div>
+          </div>
+          <button id="refreshButton" class="btn" type="button">Refresh</button>
+          <button id="logoutButton" class="btn" type="button">Sign Out</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="summary-grid" aria-label="Cashflow summary">
+      <div class="summary-card">
+        <div class="summary-label">Total In</div>
+        <div id="totalIn" class="summary-value">UGX 0</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Total Out</div>
+        <div id="totalOut" class="summary-value">UGX 0</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Net Cashflow</div>
+        <div id="netCashflow" class="summary-value">UGX 0</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Transaction Count</div>
+        <div id="transactionCount" class="summary-value">0</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Latest Balance</div>
+        <div id="latestBalance" class="summary-value">-</div>
+      </div>
+    </section>
+
+    <form id="filtersForm" class="filters-card">
+      <div class="filters-row">
+        <div class="quick-filters">
+          <label>
+            Date From
+            <input id="dateFrom" name="dateFrom" type="date" />
+          </label>
+
+          <label>
+            Date To
+            <input id="dateTo" name="dateTo" type="date" />
+          </label>
+
+          <label>
+            Provider
+            <select id="provider" name="provider">
+              <option value="">All providers</option>
+              <option value="airtel">airtel</option>
+              <option value="mtn">mtn</option>
+            </select>
+          </label>
+
+          <label>
+            Direction
+            <select id="direction" name="direction">
+              <option value="">All directions</option>
+              <option value="IN">IN</option>
+              <option value="OUT">OUT</option>
+            </select>
+          </label>
+
+          <label>
+            Search
+            <input id="search" name="search" type="search" placeholder="Name, phone, code, reason, or SMS" />
+          </label>
+        </div>
+
+        <div class="quick-actions">
+          <button class="btn primary" type="submit">Apply Filters</button>
+          <button id="resetButton" class="btn" type="button">Reset</button>
+        </div>
+      </div>
+
+      <details id="advancedFilters">
+        <summary>More filters</summary>
+        <div class="advanced-filters">
+          <label>
+            Transaction Type
+            <select id="transactionType" name="transactionType">
+              <option value="">All transaction types</option>
+              <option value="RECEIVED">RECEIVED</option>
+              <option value="SENT">SENT</option>
+              <option value="PAID">PAID</option>
+              <option value="WITHDRAWN">WITHDRAWN</option>
+              <option value="WITHDRAWAL_REQUEST">WITHDRAWAL_REQUEST</option>
+              <option value="SYSTEM_CREDIT">SYSTEM_CREDIT</option>
+              <option value="DEDUCTED">DEDUCTED</option>
+            </select>
+          </label>
+
+          <label>
+            DeviceId
+            <select id="deviceId" name="deviceId">
+              <option value="">All devices</option>
+            </select>
+          </label>
+
+          <label>
+            Rows Per Page
+            <select id="pageSize" name="pageSize">
+              <option value="25">25</option>
+              <option value="50" selected>50</option>
+              <option value="100">100</option>
+            </select>
+          </label>
+        </div>
+      </details>
+    </form>
+
+    <section class="table-card">
+      <div class="table-head">
+        <div>
+          <h3>Transactions</h3>
+          <p id="resultsMeta" class="subtle">Loading records...</p>
+        </div>
+      </div>
+
+      <div id="emptyState" class="empty-state" hidden>No mobile money transactions found for the selected filters.</div>
+
+      <div id="tableWrap" class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>SmsDate</th>
+              <th>Provider</th>
+              <th>Direction</th>
+              <th>TransactionType</th>
+              <th>Amount</th>
+              <th>Fee</th>
+              <th>Tax</th>
+              <th>Balance</th>
+              <th>Counterparty</th>
+              <th>TransactionCode</th>
+              <th>Reason</th>
+              <th>DeviceId</th>
+              <th>SMS</th>
+            </tr>
+          </thead>
+          <tbody id="rowsBody"></tbody>
+        </table>
+      </div>
+
+      <div class="pagination">
+        <div id="paginationInfo" class="subtle">Page 1</div>
+        <div class="pager-buttons">
+          <button id="prevPage" class="btn" type="button">Previous</button>
+          <button id="nextPage" class="btn" type="button">Next</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const REFRESH_INTERVAL_MS = 10000;
+
+    const state = {
+      page: 1,
+      pageSize: 50,
+      totalRows: 0,
+      rows: [],
+      loading: false,
+      intervalId: null,
+      socket: null,
+      pendingRefreshReason: "",
+      scheduledRefreshId: null,
+      latestStatus: "paused",
+      lastUpdatedAt: null,
+    };
+
+    const filtersForm = document.getElementById("filtersForm");
+    const rowsBody = document.getElementById("rowsBody");
+    const emptyState = document.getElementById("emptyState");
+    const tableWrap = document.getElementById("tableWrap");
+    const resultsMeta = document.getElementById("resultsMeta");
+    const paginationInfo = document.getElementById("paginationInfo");
+    const prevPageButton = document.getElementById("prevPage");
+    const nextPageButton = document.getElementById("nextPage");
+    const pageSizeSelect = document.getElementById("pageSize");
+    const deviceIdSelect = document.getElementById("deviceId");
+    const welcomeText = document.getElementById("welcomeText");
+    const liveState = document.getElementById("liveState");
+    const lastUpdated = document.getElementById("lastUpdated");
+    const statusMessage = document.getElementById("statusMessage");
+
+    const fields = {
+      dateFrom: document.getElementById("dateFrom"),
+      dateTo: document.getElementById("dateTo"),
+      provider: document.getElementById("provider"),
+      direction: document.getElementById("direction"),
+      transactionType: document.getElementById("transactionType"),
+      deviceId: deviceIdSelect,
+      search: document.getElementById("search"),
+      pageSize: pageSizeSelect,
+    };
+
+    boot();
+
+    async function boot() {
+      const meResponse = await fetch("/api/me", { credentials: "same-origin" }).catch(() => null);
+      if (!meResponse || !meResponse.ok) {
+        window.location.href = "/";
+        return;
+      }
+
+      const meData = await meResponse.json();
+      const user = meData.user || {};
+      welcomeText.textContent = `Signed in as ${user.name || user.username || "user"}. Filters stay in place while live updates refresh this view.`;
+
+      await loadDevices();
+      connectRealtime();
+      bindEvents();
+      startPolling();
+      await loadCashflow({ reason: "initial", highlightNewRows: false });
+    }
+
+    function bindEvents() {
+      filtersForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        state.page = 1;
+        state.pageSize = Number(pageSizeSelect.value || 50);
+        await loadCashflow({ reason: "manual", highlightNewRows: false });
+      });
+
+      pageSizeSelect.addEventListener("change", async () => {
+        state.page = 1;
+        state.pageSize = Number(pageSizeSelect.value || 50);
+        await loadCashflow({ reason: "manual", highlightNewRows: false });
+      });
+
+      document.getElementById("refreshButton").addEventListener("click", async () => {
+        await loadCashflow({ reason: "manual", highlightNewRows: false });
+      });
+
+      document.getElementById("resetButton").addEventListener("click", async () => {
+        filtersForm.reset();
+        state.page = 1;
+        state.pageSize = 50;
+        pageSizeSelect.value = "50";
+        await loadCashflow({ reason: "manual", highlightNewRows: false });
+      });
+
+      document.getElementById("logoutButton").addEventListener("click", async () => {
+        await fetch("/api/logout", {
+          method: "POST",
+          credentials: "same-origin"
+        }).catch(() => {});
+
+        window.location.href = "/";
+      });
+
+      prevPageButton.addEventListener("click", async () => {
+        if (state.page <= 1 || state.loading) {
+          return;
+        }
+
+        state.page -= 1;
+        await loadCashflow({ reason: "manual", highlightNewRows: false });
+      });
+
+      nextPageButton.addEventListener("click", async () => {
+        if (state.loading) {
+          return;
+        }
+
+        const totalPages = Math.max(1, Math.ceil(state.totalRows / state.pageSize));
+        if (state.page >= totalPages) {
+          return;
+        }
+
+        state.page += 1;
+        await loadCashflow({ reason: "manual", highlightNewRows: false });
+      });
+
+      document.addEventListener("visibilitychange", async () => {
+        if (document.hidden) {
+          stopPolling();
+          setLiveState("paused", "Paused while this tab is hidden.");
+          return;
+        }
+
+        startPolling();
+        await loadCashflow({ reason: "resume", highlightNewRows: true });
+      });
+    }
+
+    function connectRealtime() {
+      if (typeof io !== "function") {
+        return;
+      }
+
+      state.socket = io({ withCredentials: true });
+
+      state.socket.on("connect", () => {
+        if (!document.hidden) {
+          setLiveState("live", "Live updates connected.");
+        }
+      });
+
+      state.socket.on("disconnect", () => {
+        if (!document.hidden) {
+          setLiveState("paused", "Live signal disconnected. Polling continues.");
+        }
+      });
+
+      state.socket.on("connect_error", (error) => {
+        setLiveState("error", error.message || "Realtime connection unavailable.");
+      });
+
+      state.socket.on("cashflow_activity", () => {
+        if (document.hidden) {
+          return;
+        }
+
+        scheduleRefresh("realtime");
+      });
+    }
+
+    function startPolling() {
+      stopPolling();
+      if (document.hidden) {
+        return;
+      }
+
+      setLiveState("live", "Live polling every 10 seconds.");
+      state.intervalId = window.setInterval(() => {
+        if (!document.hidden) {
+          loadCashflow({ reason: "poll", highlightNewRows: true }).catch(() => {});
+        }
+      }, REFRESH_INTERVAL_MS);
+    }
+
+    function stopPolling() {
+      if (state.intervalId) {
+        window.clearInterval(state.intervalId);
+        state.intervalId = null;
+      }
+    }
+
+    function scheduleRefresh(reason) {
+      if (state.scheduledRefreshId) {
+        window.clearTimeout(state.scheduledRefreshId);
+      }
+
+      state.scheduledRefreshId = window.setTimeout(() => {
+        state.scheduledRefreshId = null;
+        loadCashflow({ reason, highlightNewRows: true }).catch(() => {});
+      }, 250);
+    }
+
+    async function loadDevices() {
+      const response = await fetch("/api/devices", { credentials: "same-origin" });
+      if (!response.ok) {
+        return;
+      }
+
+      const data = await response.json();
+      const rows = Array.isArray(data.rows) ? data.rows : [];
+      const existingValue = deviceIdSelect.value;
+
+      deviceIdSelect.innerHTML = '<option value="">All devices</option>';
+      for (const row of rows) {
+        const option = document.createElement("option");
+        option.value = row.DeviceId || "";
+        option.textContent = row.DeviceName
+          ? `${row.DeviceId} - ${row.DeviceName}`
+          : (row.DeviceId || "");
+        deviceIdSelect.appendChild(option);
+      }
+
+      if (existingValue) {
+        deviceIdSelect.value = existingValue;
+      }
+    }
+
+    async function loadCashflow({ reason = "manual", highlightNewRows = false } = {}) {
+      if (state.loading) {
+        state.pendingRefreshReason = reason;
+        return;
+      }
+
+      state.loading = true;
+      setLiveState("refreshing", reason === "poll" ? "Refreshing..." : "Loading latest cashflow...");
+
+      try {
+        const previousIds = new Set(state.rows.map((row) => String(row.MobileMoneyTransactionId || row.ForwardedSmsId || "")));
+        const params = new URLSearchParams();
+        const filterValues = readFilters();
+
+        for (const [key, value] of Object.entries(filterValues)) {
+          if (value !== "") {
+            params.set(key, value);
+          }
+        }
+
+        params.set("page", String(state.page));
+        params.set("pageSize", String(state.pageSize));
+
+        const response = await fetch(`/api/cashflow?${params.toString()}`, {
+          credentials: "same-origin"
+        });
+
+        if (response.status === 401) {
+          window.location.href = "/";
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error("Could not load cashflow data.");
+        }
+
+        const data = await response.json();
+        const rows = Array.isArray(data.rows) ? dedupeRows(data.rows) : [];
+        const newIds = highlightNewRows ? rows
+          .map((row) => String(row.MobileMoneyTransactionId || row.ForwardedSmsId || ""))
+          .filter((id) => id && !previousIds.has(id)) : [];
+
+        state.totalRows = Number(data.totalRows || 0);
+        state.page = Number(data.page || state.page);
+        state.pageSize = Number(data.pageSize || state.pageSize);
+        state.rows = rows;
+        state.lastUpdatedAt = new Date();
+
+        renderSummary(data.summary || {});
+        renderRows(rows, new Set(newIds));
+        renderPagination();
+        updateLastUpdated();
+
+        if (newIds.length > 0) {
+          setLiveState("live", `${newIds.length} new transaction${newIds.length === 1 ? "" : "s"} loaded.`);
+        } else if (reason === "poll" || reason === "realtime" || reason === "resume") {
+          setLiveState("live", "Live");
+        } else {
+          setLiveState("live", "Refresh complete.");
+        }
+      } catch (error) {
+        rowsBody.innerHTML = "";
+        emptyState.hidden = false;
+        tableWrap.hidden = true;
+        resultsMeta.textContent = error.message || "Could not load transactions.";
+        setLiveState("error", error.message || "Could not refresh cashflow.");
+      } finally {
+        state.loading = false;
+
+        if (state.pendingRefreshReason) {
+          const queuedReason = state.pendingRefreshReason;
+          state.pendingRefreshReason = "";
+          loadCashflow({ reason: queuedReason, highlightNewRows: true }).catch(() => {});
+        }
+      }
+    }
+
+    function readFilters() {
+      return {
+        dateFrom: fields.dateFrom.value,
+        dateTo: fields.dateTo.value,
+        provider: fields.provider.value,
+        direction: fields.direction.value,
+        transactionType: fields.transactionType.value,
+        deviceId: fields.deviceId.value,
+        search: fields.search.value.trim(),
+      };
+    }
+
+    function renderSummary(summary) {
+      document.getElementById("totalIn").textContent = formatCurrency(summary.totalIn);
+      document.getElementById("totalOut").textContent = formatCurrency(summary.totalOut);
+      document.getElementById("netCashflow").textContent = formatCurrency(summary.net);
+      document.getElementById("transactionCount").textContent = formatCount(summary.transactionCount);
+      document.getElementById("latestBalance").textContent =
+        summary.latestBalance == null ? "-" : formatCurrency(summary.latestBalance);
+    }
+
+    function renderRows(rows, newIds) {
+      rowsBody.innerHTML = "";
+
+      if (!rows.length) {
+        emptyState.hidden = false;
+        tableWrap.hidden = true;
+        resultsMeta.textContent = "No mobile money transactions found for the selected filters.";
+        return;
+      }
+
+      emptyState.hidden = true;
+      tableWrap.hidden = false;
+
+      for (const row of rows) {
+        const rowId = String(row.MobileMoneyTransactionId || row.ForwardedSmsId || Math.random());
+        const tr = document.createElement("tr");
+        if (newIds.has(rowId)) {
+          tr.classList.add("highlight-new");
+        }
+
+        tr.innerHTML = `
+          <td>${escapeHtml(formatDate(row.SmsDate))}</td>
+          <td>${escapeHtml(row.Provider || "")}</td>
+          <td>${renderDirectionBadge(row.Direction)}</td>
+          <td>${renderTransactionTypeBadge(row.TransactionType)}</td>
+          <td class="amount">${escapeHtml(formatCurrency(row.Amount))}</td>
+          <td class="amount">${escapeHtml(formatCurrency(row.Fee))}</td>
+          <td class="amount">${escapeHtml(formatCurrency(row.Tax))}</td>
+          <td class="amount">${row.Balance == null ? "-" : escapeHtml(formatCurrency(row.Balance))}</td>
+          <td>${renderCounterparty(row)}</td>
+          <td>${escapeHtml(row.TransactionCode || "")}</td>
+          <td>${escapeHtml(row.Reason || "")}</td>
+          <td>${escapeHtml(row.DeviceId || "")}</td>
+          <td><button class="btn sms-toggle" type="button" data-row-id="${escapeHtml(rowId)}">View SMS</button></td>
+        `;
+        rowsBody.appendChild(tr);
+
+        const rawRow = document.createElement("tr");
+        rawRow.className = "raw-row";
+        rawRow.dataset.rowId = rowId;
+        rawRow.innerHTML = `
+          <td colspan="13">
+            <pre class="raw-body">${escapeHtml(row.RawBody || "No raw SMS available.")}</pre>
+          </td>
+        `;
+        rowsBody.appendChild(rawRow);
+
+        if (newIds.has(rowId)) {
+          window.setTimeout(() => tr.classList.remove("highlight-new"), 2500);
+        }
+      }
+
+      for (const button of rowsBody.querySelectorAll(".sms-toggle")) {
+        button.addEventListener("click", () => {
+          const rowId = button.dataset.rowId;
+          const rawRow = rowsBody.querySelector(`.raw-row[data-row-id="${cssEscape(rowId)}"]`);
+          if (!rawRow) {
+            return;
+          }
+
+          const isOpen = rawRow.classList.toggle("open");
+          button.textContent = isOpen ? "Hide SMS" : "View SMS";
+        });
+      }
+
+      const start = ((state.page - 1) * state.pageSize) + 1;
+      const end = start + rows.length - 1;
+      resultsMeta.textContent = `Showing ${formatCount(start)}-${formatCount(end)} of ${formatCount(state.totalRows)} transactions.`;
+    }
+
+    function renderPagination() {
+      const totalPages = Math.max(1, Math.ceil(state.totalRows / state.pageSize));
+      paginationInfo.textContent = `Page ${formatCount(state.page)} of ${formatCount(totalPages)}`;
+      prevPageButton.disabled = state.page <= 1;
+      nextPageButton.disabled = state.page >= totalPages;
+      pageSizeSelect.value = String(state.pageSize);
+    }
+
+    function updateLastUpdated() {
+      lastUpdated.textContent = `Last updated: ${state.lastUpdatedAt ? formatTime(state.lastUpdatedAt) : "-"}`;
+    }
+
+    function setLiveState(mode, message) {
+      state.latestStatus = mode;
+      liveState.className = `status-chip ${mode}`;
+      liveState.textContent = mode === "refreshing"
+        ? "Refreshing..."
+        : mode === "error"
+          ? "Error"
+          : mode === "paused"
+            ? "Paused"
+            : "Live";
+      statusMessage.textContent = message || "";
+    }
+
+    function renderCounterparty(row) {
+      const name = row.CounterpartyName || "";
+      const phone = row.CounterpartyPhone || "";
+
+      if (!name && !phone) {
+        return '<span class="muted">-</span>';
+      }
+
+      const parts = [];
+      if (name) {
+        parts.push(`<strong>${escapeHtml(name)}</strong>`);
+      }
+      if (phone) {
+        parts.push(`<span class="muted">${escapeHtml(phone)}</span>`);
+      }
+
+      return `<div class="counterparty">${parts.join("")}</div>`;
+    }
+
+    function renderDirectionBadge(direction) {
+      const normalized = String(direction || "").toUpperCase();
+      const badgeClass = normalized === "IN" ? "in" : normalized === "OUT" ? "out" : "neutral";
+      return `<span class="badge ${badgeClass}">${escapeHtml(normalized || "-")}</span>`;
+    }
+
+    function renderTransactionTypeBadge(transactionType) {
+      const normalized = String(transactionType || "").toUpperCase();
+      const badgeClass = normalized === "SYSTEM_CREDIT" ? "system" : "neutral";
+      return `<span class="badge ${badgeClass}">${escapeHtml(normalized || "-")}</span>`;
+    }
+
+    function dedupeRows(rows) {
+      const seen = new Set();
+      const uniqueRows = [];
+
+      for (const row of rows) {
+        const id = String(row.MobileMoneyTransactionId || row.ForwardedSmsId || "");
+        if (!id || seen.has(id)) {
+          continue;
+        }
+
+        seen.add(id);
+        uniqueRows.push(row);
+      }
+
+      return uniqueRows;
+    }
+
+    function formatCurrency(value) {
+      const amount = Number(value || 0);
+      return `UGX ${Math.abs(amount).toLocaleString("en-US")}`;
+    }
+
+    function formatCount(value) {
+      const count = Number(value || 0);
+      return count.toLocaleString("en-US");
+    }
+
+    function formatDate(value) {
+      if (!value) {
+        return "";
+      }
+
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) {
+        return String(value);
+      }
+
+      return date.toLocaleString();
+    }
+
+    function formatTime(value) {
+      const date = value instanceof Date ? value : new Date(value);
+      return Number.isNaN(date.getTime()) ? "-" : date.toLocaleTimeString();
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (match) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[match]));
+    }
+
+    function cssEscape(value) {
+      if (window.CSS && typeof window.CSS.escape === "function") {
+        return window.CSS.escape(value);
+      }
+
+      return String(value).replace(/["\\]/g, "\\$&");
+    }
+  </script>
+</body>
+</html>

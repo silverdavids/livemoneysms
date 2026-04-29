@@ -58,6 +58,30 @@
       margin-bottom: 22px;
     }
 
+    .topbar-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .topbar-link {
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--text);
+      padding: 10px 14px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .topbar-link:hover {
+      background: #f1f5f7;
+    }
+
     .brand {
       display: flex;
       align-items: center;
@@ -448,6 +472,11 @@
         align-items: flex-start;
       }
 
+      .topbar-nav,
+      .topbar-link {
+        width: 100%;
+      }
+
       .brand-mark {
         width: 38px;
         height: 38px;
@@ -491,6 +520,10 @@
           <p class="subtle">Secure access for assigned message streams</p>
         </div>
       </div>
+
+      <nav class="topbar-nav">
+        <a class="topbar-link" href="/cashflow">Cashflow</a>
+      </nav>
     </header>
 
     <section id="authView" class="auth-layout">

@@ -7,6 +7,11 @@ const {
   fetchNewMessages,
   filterMessagesForUser,
 } = require("./services/message-service");
+const {
+  initializeCashflowCursor,
+  fetchNewCashflowTransactions,
+  filterCashflowRowsForUser,
+} = require("./services/cashflow-service");
 const { getSessionUserById } = require("./services/auth-service");
 
 const server = http.createServer(app);
@@ -17,6 +22,7 @@ const io = new Server(server, {
   },
 });
 let isPolling = false;
+let isCashflowPolling = false;
 
 io.use((socket, next) => {
   sessionMiddleware(socket.request, {}, async (sessionError) => {
@@ -89,12 +95,50 @@ async function pushNewMessages() {
   console.log(`pushed ${pushedCount} new sms to connected users`);
 }
 
+async function pushCashflowUpdates() {
+  if (isCashflowPolling) {
+    return;
+  }
+
+  isCashflowPolling = true;
+  let pushedCount = 0;
+
+  try {
+    const rows = await fetchNewCashflowTransactions();
+    if (rows.length === 0) {
+      return;
+    }
+
+    pushedCount = rows.length;
+
+    for (const socket of io.sockets.sockets.values()) {
+      const visibleRows = filterCashflowRowsForUser(rows, socket.user);
+      if (visibleRows.length > 0) {
+        socket.emit("cashflow_activity", {
+          count: visibleRows.length,
+          ids: visibleRows.map((row) => row.MobileMoneyTransactionId),
+          latestCreatedOnUtc: visibleRows[visibleRows.length - 1].CreatedOnUtc,
+        });
+      }
+    }
+  } finally {
+    isCashflowPolling = false;
+  }
+
+  console.log(`pushed ${pushedCount} new cashflow transactions to connected users`);
+}
+
 async function start() {
   await initializeMessageCursor();
+  await initializeCashflowCursor();
 
   setInterval(() => {
     pushNewMessages().catch((error) => console.error("poll error:", error));
   }, 1000);
+
+  setInterval(() => {
+    pushCashflowUpdates().catch((error) => console.error("cashflow poll error:", error));
+  }, 10000);
 
   const port = Number(process.env.PORT || 3000);
   const host = "0.0.0.0";
