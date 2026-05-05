@@ -540,7 +540,7 @@
 
         const data = await response.json();
         const rows = normalizeRows(data);
-        rows.sort((left, right) => compareDatesDesc(left.CreatedOnUtc, right.CreatedOnUtc));
+        rows.sort((left, right) => compareDatesDesc(left.createdOnUtc, right.createdOnUtc));
 
         state.rows = rows;
         state.lastUpdatedAt = new Date();
@@ -580,7 +580,7 @@
 
     function renderRows() {
       const status = statusFilter.value;
-      const rows = state.rows.filter((row) => !status || String(row.Status || "") === status);
+      const rows = state.rows.filter((row) => !status || String(row.matchStatus || "") === status);
 
       rowsBody.innerHTML = "";
 
@@ -599,15 +599,15 @@
       for (const row of rows) {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${escapeHtml(row.TransferId || "-")}</td>
-          <td class="amount">${escapeHtml(formatNullableAmount(row.Expected))}</td>
-          <td class="amount">${escapeHtml(formatAmount(row.Received))}</td>
-          <td class="amount">${escapeHtml(formatNullableAmount(row.Difference))}</td>
-          <td>${renderStatusBadge(row.Status)}</td>
-          <td>${escapeHtml(formatScore(row.Score))}</td>
-          <td>${escapeHtml(row.Reason || "-")}</td>
-          <td>${escapeHtml(row.TransactionCode || "-")}</td>
-          <td>${escapeHtml(formatDate(row.CreatedOnUtc))}</td>
+          <td>${escapeHtml(row.externalTransferId || "-")}</td>
+          <td class="amount">${escapeHtml(formatNullableAmount(row.expectedAmount ?? "-"))}</td>
+          <td class="amount">${escapeHtml(formatAmount(row.receivedAmount))}</td>
+          <td class="amount">${escapeHtml(formatNullableAmount(row.amountDifference ?? "-"))}</td>
+          <td>${renderStatusBadge(row.matchStatus)}</td>
+          <td>${escapeHtml(formatScore(row.matchScore))}</td>
+          <td>${escapeHtml(row.matchReason || "-")}</td>
+          <td>${escapeHtml(row.transactionCode || "-")}</td>
+          <td>${escapeHtml(formatDate(row.createdOnUtc))}</td>
         `;
         rowsBody.appendChild(tr);
       }
@@ -622,12 +622,16 @@
     }
 
     function formatAmount(value) {
+      if (value == null || value === "") {
+        return "0";
+      }
+
       const amount = Number(value || 0);
       return amount.toLocaleString("en-US");
     }
 
     function formatNullableAmount(value) {
-      if (value == null || value === "") {
+      if (value == null || value === "" || value === "-") {
         return "-";
       }
 
