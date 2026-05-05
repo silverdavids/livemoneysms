@@ -1,0 +1,679 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Payment Matches</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --panel: #ffffff;
+      --text: #172033;
+      --muted: #647084;
+      --border: #d9e1ea;
+      --primary: #1f7a5c;
+      --primary-dark: #166148;
+      --accent: #2f6f9f;
+      --danger: #b42318;
+      --warning: #a15c07;
+      --shadow: 0 14px 34px rgba(23, 32, 51, 0.08);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    body {
+      border-top: 5px solid var(--primary);
+    }
+
+    button,
+    select {
+      font: inherit;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .shell {
+      width: min(1240px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 18px 0 24px;
+    }
+
+    .topbar,
+    .page-head,
+    .controls,
+    .table-head,
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .topbar {
+      margin-bottom: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius);
+      display: grid;
+      place-items: center;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 800;
+      flex: 0 0 auto;
+    }
+
+    .nav-links,
+    .page-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .nav-link,
+    .btn,
+    .meta-chip {
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    .nav-link,
+    .btn {
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .nav-link.active,
+    .btn.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .nav-link:hover,
+    .btn:hover {
+      background: #f1f5f7;
+    }
+
+    .btn.primary:hover {
+      background: var(--primary-dark);
+      border-color: var(--primary-dark);
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 22px;
+      line-height: 1.1;
+    }
+
+    h2 {
+      font-size: 18px;
+      line-height: 1.15;
+    }
+
+    h3 {
+      font-size: 15px;
+    }
+
+    .subtle {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .page-card,
+    .table-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .page-card {
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+
+    .page-head {
+      align-items: flex-start;
+    }
+
+    .controls {
+      flex-wrap: wrap;
+      align-items: end;
+      margin-top: 12px;
+    }
+
+    label {
+      display: grid;
+      gap: 5px;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 700;
+      min-width: 220px;
+    }
+
+    select {
+      min-height: 38px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 10px;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+    }
+
+    select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(31, 122, 92, 0.16);
+    }
+
+    .meta-chip {
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .table-card {
+      overflow: hidden;
+    }
+
+    .table-head {
+      padding: 12px 14px 0;
+      align-items: end;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      max-height: calc(100vh - 250px);
+      min-height: 320px;
+      padding: 10px 14px 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1080px;
+    }
+
+    th,
+    td {
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+      font-size: 13px;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      background: #fbfcfd;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .amount {
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border-radius: var(--radius);
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 800;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .badge.exactmatch {
+      color: #156c41;
+      background: #edf9f0;
+      border-color: #bde3cb;
+    }
+
+    .badge.partialpayment {
+      color: var(--warning);
+      background: #fff5e8;
+      border-color: #f1cf9a;
+    }
+
+    .badge.overpayment {
+      color: var(--accent);
+      background: #eff6ff;
+      border-color: #c7dbff;
+    }
+
+    .badge.candidate {
+      color: var(--muted);
+      background: #f4f7fa;
+      border-color: var(--border);
+    }
+
+    .badge.confirmed {
+      color: #0e5b3d;
+      background: #dff5e8;
+      border-color: #a8dbbf;
+    }
+
+    .badge.rejected {
+      color: var(--danger);
+      background: #fff1f0;
+      border-color: #ffd5d2;
+    }
+
+    .badge.default {
+      color: var(--muted);
+      background: #f4f7fa;
+      border-color: var(--border);
+    }
+
+    .empty-state {
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--muted);
+      padding: 24px 16px;
+      text-align: center;
+      line-height: 1.5;
+      margin: 10px 14px 14px;
+    }
+
+    @media (max-width: 840px) {
+      .shell {
+        width: min(100% - 18px, 1240px);
+        padding-top: 14px;
+      }
+
+      .topbar,
+      .page-head,
+      .controls,
+      .table-head,
+      .status-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .nav-links,
+      .page-actions {
+        width: 100%;
+      }
+
+      .nav-link,
+      .btn,
+      .meta-chip,
+      label {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">SMS</div>
+        <div>
+          <h1>Payment Matches</h1>
+          <p class="subtle">Read-only collection and payment match candidates from MobileMoneyApi.</p>
+        </div>
+      </div>
+
+      <nav class="nav-links">
+        <a class="nav-link" href="/">Live SMS</a>
+        <a class="nav-link" href="/cashflow">Cashflow</a>
+        <a class="nav-link active" href="/matches">Matches</a>
+      </nav>
+    </header>
+
+    <section class="page-card">
+      <div class="page-head">
+        <div>
+          <h2>Payment Matches</h2>
+          <p id="welcomeText" class="subtle">Loading match candidates...</p>
+        </div>
+
+        <div class="page-actions">
+          <button id="refreshButton" class="btn primary" type="button">Refresh</button>
+          <button id="logoutButton" class="btn" type="button">Sign Out</button>
+        </div>
+      </div>
+
+      <div class="controls">
+        <label>
+          Status
+          <select id="statusFilter" name="statusFilter">
+            <option value="">All statuses</option>
+            <option value="ExactMatch">ExactMatch</option>
+            <option value="PartialPayment">PartialPayment</option>
+            <option value="OverPayment">OverPayment</option>
+            <option value="Candidate">Candidate</option>
+            <option value="Confirmed">Confirmed</option>
+            <option value="Rejected">Rejected</option>
+          </select>
+        </label>
+
+        <div class="status-row">
+          <div id="liveStatus" class="meta-chip">Auto-refresh: every 15 seconds</div>
+          <div id="lastUpdated" class="meta-chip">Last updated: -</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="table-card">
+      <div class="table-head">
+        <div>
+          <h3>Match Candidates</h3>
+          <p id="resultsMeta" class="subtle">Loading records...</p>
+        </div>
+      </div>
+
+      <div id="emptyState" class="empty-state" hidden>No payment match candidates found.</div>
+
+      <div id="tableWrap" class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>TransferId</th>
+              <th>Expected</th>
+              <th>Received</th>
+              <th>Difference</th>
+              <th>Status</th>
+              <th>Score</th>
+              <th>Reason</th>
+              <th>TransactionCode</th>
+              <th>CreatedOnUtc</th>
+            </tr>
+          </thead>
+          <tbody id="rowsBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const rowsBody = document.getElementById("rowsBody");
+    const emptyState = document.getElementById("emptyState");
+    const tableWrap = document.getElementById("tableWrap");
+    const resultsMeta = document.getElementById("resultsMeta");
+    const statusFilter = document.getElementById("statusFilter");
+    const liveStatus = document.getElementById("liveStatus");
+    const lastUpdated = document.getElementById("lastUpdated");
+    const welcomeText = document.getElementById("welcomeText");
+
+    const state = {
+      rows: [],
+      timerId: null,
+      loading: false,
+      lastUpdatedAt: null,
+    };
+
+    boot();
+
+    async function boot() {
+      const meResponse = await fetch("/api/me", { credentials: "same-origin" }).catch(() => null);
+      if (!meResponse || !meResponse.ok) {
+        window.location.href = "/";
+        return;
+      }
+
+      const meData = await meResponse.json();
+      const user = meData.user || {};
+      welcomeText.textContent = `Signed in as ${user.name || user.username || "user"}. Newest payment matches appear first.`;
+
+      bindEvents();
+      startRefreshLoop();
+      await loadMatches(false);
+    }
+
+    function bindEvents() {
+      statusFilter.addEventListener("change", renderRows);
+
+      document.getElementById("refreshButton").addEventListener("click", async () => {
+        await loadMatches(true);
+      });
+
+      document.getElementById("logoutButton").addEventListener("click", async () => {
+        await fetch("/api/logout", {
+          method: "POST",
+          credentials: "same-origin"
+        }).catch(() => {});
+
+        window.location.href = "/";
+      });
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          stopRefreshLoop();
+          liveStatus.textContent = "Auto-refresh paused while tab is hidden";
+          return;
+        }
+
+        startRefreshLoop();
+        loadMatches(false).catch(() => {});
+      });
+    }
+
+    function startRefreshLoop() {
+      stopRefreshLoop();
+      liveStatus.textContent = "Auto-refresh: every 15 seconds";
+      state.timerId = window.setInterval(() => {
+        if (!document.hidden) {
+          loadMatches(false).catch(() => {});
+        }
+      }, 15000);
+    }
+
+    function stopRefreshLoop() {
+      if (state.timerId) {
+        window.clearInterval(state.timerId);
+        state.timerId = null;
+      }
+    }
+
+    async function loadMatches(isManualRefresh) {
+      if (state.loading) {
+        return;
+      }
+
+      state.loading = true;
+      liveStatus.textContent = isManualRefresh ? "Refreshing..." : "Loading latest matches...";
+
+      try {
+        const response = await fetch("/api/matches", {
+          credentials: "same-origin"
+        });
+
+        if (response.status === 401) {
+          window.location.href = "/";
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch matches");
+        }
+
+        const data = await response.json();
+        const rows = normalizeRows(data);
+        rows.sort((left, right) => compareDatesDesc(left.CreatedOnUtc, right.CreatedOnUtc));
+
+        state.rows = rows;
+        state.lastUpdatedAt = new Date();
+        renderRows();
+        lastUpdated.textContent = `Last updated: ${formatTime(state.lastUpdatedAt)}`;
+        liveStatus.textContent = "Auto-refresh: every 15 seconds";
+      } catch (error) {
+        rowsBody.innerHTML = "";
+        emptyState.hidden = false;
+        tableWrap.hidden = true;
+        resultsMeta.textContent = error.message || "Failed to fetch matches";
+        liveStatus.textContent = error.message || "Failed to fetch matches";
+      } finally {
+        state.loading = false;
+      }
+    }
+
+    function normalizeRows(payload) {
+      if (Array.isArray(payload)) {
+        return payload;
+      }
+
+      if (Array.isArray(payload.rows)) {
+        return payload.rows;
+      }
+
+      if (Array.isArray(payload.data)) {
+        return payload.data;
+      }
+
+      if (Array.isArray(payload.items)) {
+        return payload.items;
+      }
+
+      return [];
+    }
+
+    function renderRows() {
+      const status = statusFilter.value;
+      const rows = state.rows.filter((row) => !status || String(row.Status || "") === status);
+
+      rowsBody.innerHTML = "";
+
+      if (rows.length === 0) {
+        emptyState.hidden = false;
+        tableWrap.hidden = true;
+        resultsMeta.textContent = status
+          ? `No payment match candidates found for status ${status}.`
+          : "No payment match candidates found.";
+        return;
+      }
+
+      emptyState.hidden = true;
+      tableWrap.hidden = false;
+
+      for (const row of rows) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHtml(row.TransferId || "-")}</td>
+          <td class="amount">${escapeHtml(formatNullableAmount(row.Expected))}</td>
+          <td class="amount">${escapeHtml(formatAmount(row.Received))}</td>
+          <td class="amount">${escapeHtml(formatNullableAmount(row.Difference))}</td>
+          <td>${renderStatusBadge(row.Status)}</td>
+          <td>${escapeHtml(formatScore(row.Score))}</td>
+          <td>${escapeHtml(row.Reason || "-")}</td>
+          <td>${escapeHtml(row.TransactionCode || "-")}</td>
+          <td>${escapeHtml(formatDate(row.CreatedOnUtc))}</td>
+        `;
+        rowsBody.appendChild(tr);
+      }
+
+      resultsMeta.textContent = `Showing ${rows.length.toLocaleString("en-US")} match candidate${rows.length === 1 ? "" : "s"}.`;
+    }
+
+    function renderStatusBadge(status) {
+      const label = String(status || "Candidate");
+      const className = label.toLowerCase();
+      return `<span class="badge ${escapeHtml(className)}">${escapeHtml(label)}</span>`;
+    }
+
+    function formatAmount(value) {
+      const amount = Number(value || 0);
+      return amount.toLocaleString("en-US");
+    }
+
+    function formatNullableAmount(value) {
+      if (value == null || value === "") {
+        return "-";
+      }
+
+      return formatAmount(value);
+    }
+
+    function formatScore(value) {
+      if (value == null || value === "") {
+        return "-";
+      }
+
+      return Number(value).toLocaleString("en-US", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      });
+    }
+
+    function compareDatesDesc(left, right) {
+      const leftTime = new Date(left || 0).getTime();
+      const rightTime = new Date(right || 0).getTime();
+      return rightTime - leftTime;
+    }
+
+    function formatDate(value) {
+      if (!value) {
+        return "-";
+      }
+
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
+    }
+
+    function formatTime(value) {
+      const date = value instanceof Date ? value : new Date(value);
+      return Number.isNaN(date.getTime()) ? "-" : date.toLocaleTimeString();
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (match) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[match]));
+    }
+  </script>
+</body>
+</html>

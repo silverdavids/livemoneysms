@@ -9,6 +9,7 @@ const messageRoutes = require("./routes/message-routes");
 const deviceRoutes = require("./routes/device-routes");
 const userDeviceRoutes = require("./routes/user-device-routes");
 const cashflowRoutes = require("./routes/cashflow-routes");
+const matchesRoutes = require("./routes/matches-routes");
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/devices", deviceRoutes);
 app.use("/api/user-devices", userDeviceRoutes);
 app.use(cashflowRoutes);
+app.use(matchesRoutes);
 
 app.use(express.static(path.join(__dirname, "public")));
 
