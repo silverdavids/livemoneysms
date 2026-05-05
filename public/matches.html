@@ -313,6 +313,71 @@
       border-color: var(--border);
     }
 
+    .action-cell {
+      white-space: nowrap;
+    }
+
+    .action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .btn.small {
+      min-height: 30px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .btn.success {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .btn.success:hover {
+      background: var(--primary-dark);
+      border-color: var(--primary-dark);
+    }
+
+    .btn.danger {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: #fff;
+    }
+
+    .btn.danger:hover {
+      background: #8f1d14;
+      border-color: #8f1d14;
+    }
+
+    .toast-wrap {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: min(360px, calc(100% - 32px));
+    }
+
+    .toast {
+      border-radius: var(--radius);
+      background: #172033;
+      color: #fff;
+      box-shadow: 0 16px 34px rgba(23, 32, 51, 0.22);
+      padding: 13px 14px;
+      line-height: 1.45;
+      font-size: 14px;
+    }
+
+    .toast strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
     .empty-state {
       border: 1px dashed var(--border);
       border-radius: var(--radius);
@@ -431,6 +496,7 @@
               <th>Sender Phone</th>
               <th>Sender Name</th>
               <th>CreatedOnUtc</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody id="rowsBody"></tbody>
@@ -438,6 +504,8 @@
       </div>
     </section>
   </main>
+
+  <div id="toastWrap" class="toast-wrap"></div>
 
   <script>
     const rowsBody = document.getElementById("rowsBody");
@@ -448,6 +516,7 @@
     const liveStatus = document.getElementById("liveStatus");
     const lastUpdated = document.getElementById("lastUpdated");
     const welcomeText = document.getElementById("welcomeText");
+    const toastWrap = document.getElementById("toastWrap");
 
     const state = {
       rows: [],
@@ -614,8 +683,20 @@
           <td>${escapeHtml(row.senderPhone || row.cashierPhone || "-")}</td>
           <td>${escapeHtml(row.senderName || "-")}</td>
           <td>${escapeHtml(formatDate(row.createdOnUtc))}</td>
+          <td class="action-cell">${renderActionButtons(row)}</td>
         `;
         rowsBody.appendChild(tr);
+      }
+
+      for (const button of rowsBody.querySelectorAll("[data-action][data-id]")) {
+        button.addEventListener("click", async () => {
+          if (state.loading) {
+            return;
+          }
+
+          const { id, action } = button.dataset;
+          await runMatchAction(id, action);
+        });
       }
 
       resultsMeta.textContent = `Showing ${rows.length.toLocaleString("en-US")} match candidate${rows.length === 1 ? "" : "s"}.`;
@@ -625,6 +706,55 @@
       const label = String(status || "Candidate");
       const className = label.toLowerCase();
       return `<span class="badge ${escapeHtml(className)}">${escapeHtml(label)}</span>`;
+    }
+
+    function renderActionButtons(row) {
+      const status = String(row.matchStatus || "");
+      if (status === "Confirmed" || status === "Rejected") {
+        return '<span class="subtle">-</span>';
+      }
+
+      const id = row.id ?? row.paymentMatchCandidateId ?? row.externalTransferId ?? "";
+      if (!id) {
+        return '<span class="subtle">-</span>';
+      }
+
+      return `
+        <div class="action-buttons">
+          <button class="btn small success" type="button" data-action="confirm" data-id="${escapeHtml(String(id))}">Confirm</button>
+          <button class="btn small danger" type="button" data-action="reject" data-id="${escapeHtml(String(id))}">Reject</button>
+        </div>
+      `;
+    }
+
+    async function runMatchAction(id, action) {
+      const message = action === "confirm" ? "Payment confirmed" : "Payment rejected";
+      liveStatus.textContent = action === "confirm" ? "Confirming payment..." : "Rejecting payment...";
+
+      try {
+        const response = await fetch(`/api/matches/${encodeURIComponent(id)}/${action}`, {
+          method: "POST",
+          credentials: "same-origin"
+        });
+
+        if (response.status === 401) {
+          window.location.href = "/";
+          return;
+        }
+
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data.error || `Failed to ${action} match`);
+        }
+
+        showToast(message, action === "confirm"
+          ? "The payment match was marked as confirmed."
+          : "The payment match was marked as rejected.");
+        await loadMatches(false);
+      } catch (error) {
+        showToast("Action Failed", error.message || `Failed to ${action} match`);
+        liveStatus.textContent = error.message || `Failed to ${action} match`;
+      }
     }
 
     function formatAmount(value) {
@@ -683,6 +813,23 @@
         '"': "&quot;",
         "'": "&#39;"
       }[match]));
+    }
+
+    function showToast(title, message) {
+      const div = document.createElement("div");
+      div.className = "toast";
+      div.innerHTML = `
+        <strong>${escapeHtml(title)}</strong>
+        <span>${escapeHtml(message)}</span>
+      `;
+      toastWrap.appendChild(div);
+
+      window.setTimeout(() => {
+        div.style.opacity = "0";
+        div.style.transform = "translateY(-4px)";
+        div.style.transition = "0.2s ease";
+        window.setTimeout(() => div.remove(), 220);
+      }, 3200);
     }
   </script>
 </body>
