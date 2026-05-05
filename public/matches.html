@@ -420,6 +420,7 @@
           <thead>
             <tr>
               <th>TransferId</th>
+              <th>Branch</th>
               <th>Expected</th>
               <th>Received</th>
               <th>Difference</th>
@@ -427,6 +428,8 @@
               <th>Score</th>
               <th>Reason</th>
               <th>TransactionCode</th>
+              <th>Sender Phone</th>
+              <th>Sender Name</th>
               <th>CreatedOnUtc</th>
             </tr>
           </thead>
@@ -600,6 +603,7 @@
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${escapeHtml(row.externalTransferId || "-")}</td>
+          <td>${escapeHtml(row.branchName || row.cashierAlias || "-")}</td>
           <td class="amount">${escapeHtml(formatNullableAmount(row.expectedAmount ?? "-"))}</td>
           <td class="amount">${escapeHtml(formatAmount(row.receivedAmount))}</td>
           <td class="amount">${escapeHtml(formatNullableAmount(row.amountDifference ?? "-"))}</td>
@@ -607,6 +611,8 @@
           <td>${escapeHtml(formatScore(row.matchScore))}</td>
           <td>${escapeHtml(row.matchReason || "-")}</td>
           <td>${escapeHtml(row.transactionCode || "-")}</td>
+          <td>${escapeHtml(row.senderPhone || row.cashierPhone || "-")}</td>
+          <td>${escapeHtml(row.senderName || "-")}</td>
           <td>${escapeHtml(formatDate(row.createdOnUtc))}</td>
         `;
         rowsBody.appendChild(tr);
