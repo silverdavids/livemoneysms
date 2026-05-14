@@ -40,7 +40,8 @@
     }
 
     button,
-    input {
+    input,
+    select {
       font: inherit;
     }
 
@@ -208,6 +209,21 @@
       box-shadow: 0 0 0 3px rgba(31, 122, 92, 0.16);
     }
 
+    select {
+      min-height: 42px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 10px;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+    }
+
+    select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(31, 122, 92, 0.16);
+    }
+
     .btn {
       min-height: 44px;
       border: 0;
@@ -347,10 +363,56 @@
       font-size: 19px;
     }
 
+    .timeline-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .filter-group {
+      display: grid;
+      gap: 5px;
+      min-width: 220px;
+    }
+
+    .filter-group label {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
     .sms-list {
       display: flex;
       flex-direction: column;
+      gap: 16px;
+    }
+
+    .client-group {
+      display: grid;
       gap: 10px;
+    }
+
+    .client-group-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      padding: 4px 0 8px;
+    }
+
+    .client-group-title {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .client-group-title strong {
+      font-size: 16px;
     }
 
     .sms-card {
@@ -397,6 +459,49 @@
       line-height: 1.55;
       overflow-wrap: anywhere;
       white-space: pre-wrap;
+    }
+
+    .sms-insights {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #eef2f6;
+    }
+
+    .sms-insight-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .match-badge {
+      border-color: transparent;
+      font-weight: 800;
+    }
+
+    .match-badge.pendingmatch {
+      color: var(--warning);
+      background: #fff5e8;
+      border-color: #f1cf9a;
+    }
+
+    .match-badge.matched {
+      color: var(--accent);
+      background: #eff6ff;
+      border-color: #c7dbff;
+    }
+
+    .match-badge.paymentreceived {
+      color: #156c41;
+      background: #edf9f0;
+      border-color: #bde3cb;
+    }
+
+    .match-badge.needsreview {
+      color: #5a6473;
+      background: #f3f4f6;
+      border-color: #d5d9df;
     }
 
     .empty-state {
@@ -460,6 +565,11 @@
       .stats {
         grid-template-columns: 1fr;
       }
+
+      .section-head {
+        align-items: stretch;
+        flex-direction: column;
+      }
     }
 
     @media (max-width: 560px) {
@@ -496,7 +606,10 @@
 
       .dashboard-actions,
       .dashboard-actions .btn,
-      .dashboard-actions .status-badge {
+      .dashboard-actions .status-badge,
+      .timeline-tools,
+      .filter-group,
+      .filter-group select {
         width: 100%;
       }
 
@@ -610,6 +723,26 @@
           <h3>Message Timeline</h3>
           <p class="subtle">Live updates are filtered by your account.</p>
         </div>
+
+        <div class="timeline-tools">
+          <div class="filter-group">
+            <label for="clientFilter">Client</label>
+            <select id="clientFilter">
+              <option value="all">All Clients</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="messageFilter">Transfer Monitor</label>
+            <select id="messageFilter">
+              <option value="all">All</option>
+              <option value="with-transfer-ref">With Transfer Ref</option>
+              <option value="pendingmatch">PendingMatch</option>
+              <option value="paymentreceived">PaymentReceived</option>
+              <option value="needsreview">NeedsReview</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <div id="list" class="sms-list">
@@ -636,8 +769,12 @@
     const deviceScopeEl = document.getElementById("deviceScope");
     const welcomeText = document.getElementById("welcomeText");
     const toastWrap = document.getElementById("toastWrap");
+    const messageFilter = document.getElementById("messageFilter");
+    const clientFilter = document.getElementById("clientFilter");
 
     const seen = new Set();
+    const rowsById = new Map();
+    const orderedIds = [];
     let socket = null;
     let initialLoadDone = false;
     let audioContext = null;
@@ -648,6 +785,12 @@
 
     async function boot() {
       refreshNotifStatus();
+      messageFilter.addEventListener("change", () => {
+        renderMessages();
+      });
+      clientFilter.addEventListener("change", () => {
+        renderMessages();
+      });
 
       try {
         const response = await fetch("/api/me", { credentials: "same-origin" });
@@ -774,35 +917,43 @@
 
       socket.on("initial_sms", (rows) => {
         resetMessages();
-
-        for (const row of rows) {
-          addRow(row, false, false);
-        }
-
+        addRows(rows, false);
+        renderMessages();
         updateTotal();
         initialLoadDone = true;
       });
 
       socket.on("new_sms", (rows) => {
+        const newIds = [];
+
         for (const row of rows) {
-          const isNew = !seen.has(row.ForwardedSmsId);
-          addRow(row, true, isNew);
+          const rowId = String(row.ForwardedSmsId || "");
+          const isNew = !seen.has(rowId);
+          const added = addRowToState(row, true);
+          if (added) {
+            newIds.push(rowId);
+          }
 
           if (initialLoadDone && isNew) {
             playSmsAlert();
             notifySms(row);
-            showToast("New SMS Received", `${row.ProviderHint || "Unknown"} | ${row.From || "Unknown sender"}`);
+            showToast("New SMS Received", `${row.BusinessName || "Unregistered / Legacy Device"} | ${row.From || "Unknown sender"}`);
           }
         }
 
+        updateClientFilterOptions();
+        renderMessages(new Set(newIds));
         updateTotal();
       });
     }
 
     function resetMessages() {
       seen.clear();
+      rowsById.clear();
+      orderedIds.length = 0;
       initialLoadDone = false;
       list.innerHTML = `<div id="emptyState" class="empty-state">Waiting for messages...</div>`;
+      clientFilter.innerHTML = `<option value="all">All Clients</option>`;
       updateTotal();
     }
 
@@ -903,35 +1054,261 @@
       oscillator.stop(startTime + duration + 0.03);
     }
 
-    function addRow(row, prepend = true, markAsNew = false) {
-      if (!row || seen.has(row.ForwardedSmsId)) return;
-      seen.add(row.ForwardedSmsId);
+    function addRows(rows, prepend = true) {
+      for (const row of rows || []) {
+        addRowToState(row, prepend);
+      }
+    }
 
-      const div = document.createElement("div");
-      div.className = "sms-card";
+    function addRowToState(row, prepend = true) {
+      if (!row || !row.ForwardedSmsId) return false;
 
-      div.innerHTML = `
-        <div class="sms-meta">
-          <span class="pill">${escapeHtml(formatDate(row.CreatedOnUtc))}</span>
-          <span class="pill">${escapeHtml(row.ProviderHint || "Unknown Provider")}</span>
-          <span class="pill">${escapeHtml(row.From || "Unknown Sender")}</span>
-          <span class="pill">device=${escapeHtml(row.DeviceId || "N/A")}</span>
-        </div>
-        <div class="sms-body">${escapeHtml(row.Body || "")}</div>
-      `;
+      const key = String(row.ForwardedSmsId);
+      if (seen.has(key)) {
+        rowsById.set(key, row);
+        return false;
+      }
+
+      seen.add(key);
+      rowsById.set(key, row);
 
       if (prepend) {
-        list.prepend(div);
+        orderedIds.unshift(key);
       } else {
-        list.appendChild(div);
+        orderedIds.push(key);
       }
 
-      if (markAsNew) {
-        window.setTimeout(() => {
-          div.classList.add("flash-new");
-          window.setTimeout(() => div.classList.remove("flash-new"), 3000);
-        }, 50);
+      updateClientFilterOptions();
+      return true;
+    }
+
+    function renderMessages(highlightIds = new Set()) {
+      const visibleRows = orderedIds
+        .map((id) => rowsById.get(id))
+        .filter(Boolean)
+        .filter(matchesActiveFilter);
+
+      if (visibleRows.length === 0) {
+        list.innerHTML = `<div id="emptyState" class="empty-state">${seen.size > 0 ? "No messages match the selected filters." : "Waiting for messages..."}</div>`;
+        return;
       }
+
+      list.innerHTML = "";
+      const groups = groupRowsByClient(visibleRows);
+
+      for (const group of groups) {
+        const section = document.createElement("section");
+        section.className = "client-group";
+        section.innerHTML = `
+          <div class="client-group-head">
+            <div class="client-group-title">
+              <strong>${escapeHtml(group.label)}</strong>
+              ${group.businessType ? `<span class="pill">${escapeHtml(group.businessType)}</span>` : ""}
+            </div>
+            <span class="pill">${group.rows.length} message${group.rows.length === 1 ? "" : "s"}</span>
+          </div>
+        `;
+
+        for (const row of group.rows) {
+          const div = document.createElement("div");
+          div.className = "sms-card";
+
+          div.innerHTML = `
+            <div class="sms-meta">
+              <span class="pill">${escapeHtml(formatDate(row.CreatedOnUtc))}</span>
+              <span class="pill">${escapeHtml(row.BusinessName || "Unregistered / Legacy Device")}</span>
+              <span class="pill">${escapeHtml(row.ProviderHint || row.Provider || "Unknown Provider")}</span>
+              <span class="pill">${escapeHtml(row.From || row.CounterpartyPhone || "Unknown Sender")}</span>
+              <span class="pill">device=${escapeHtml(row.DeviceName || row.DeviceId || "N/A")}</span>
+              ${row.DevicePhone ? `<span class="pill">${escapeHtml(row.DevicePhone)}</span>` : ""}
+              ${row.LastSeenOnUtc ? `<span class="pill">seen=${escapeHtml(formatDate(row.LastSeenOnUtc))}</span>` : ""}
+              ${renderTransferRefBadge(row)}
+              ${renderMatchStatusBadge(row)}
+            </div>
+            <div class="sms-body">${escapeHtml(row.Body || "")}</div>
+            ${renderMobileMoneyInsights(row)}
+          `;
+
+          section.appendChild(div);
+
+          if (highlightIds.has(String(row.ForwardedSmsId))) {
+            window.setTimeout(() => {
+              div.classList.add("flash-new");
+              window.setTimeout(() => div.classList.remove("flash-new"), 3000);
+            }, 50);
+          }
+        }
+
+        list.appendChild(section);
+      }
+    }
+
+    function matchesActiveFilter(row) {
+      const mode = String(messageFilter.value || "all");
+      if (!matchesClientFilter(row)) {
+        return false;
+      }
+
+      const matchStatus = normalizeMatchStatus(row.MatchStatus);
+
+      if (mode === "with-transfer-ref") {
+        return Boolean(row.ParsedTransferId);
+      }
+
+      if (mode === "pendingmatch") {
+        return matchStatus === "pendingmatch";
+      }
+
+      if (mode === "paymentreceived") {
+        return matchStatus === "paymentreceived";
+      }
+
+      if (mode === "needsreview") {
+        return matchStatus === "needsreview";
+      }
+
+      return true;
+    }
+
+    function matchesClientFilter(row) {
+      const selectedClient = String(clientFilter.value || "all");
+      return selectedClient === "all" || getClientKey(row) === selectedClient;
+    }
+
+    function updateClientFilterOptions() {
+      const selectedValue = clientFilter.value || "all";
+      const clients = new Map();
+
+      for (const row of rowsById.values()) {
+        const key = getClientKey(row);
+        if (!clients.has(key)) {
+          clients.set(key, getClientLabel(row));
+        }
+      }
+
+      const sortedClients = [...clients.entries()].sort((a, b) => {
+        if (a[0] === "legacy") return 1;
+        if (b[0] === "legacy") return -1;
+        return a[1].localeCompare(b[1]);
+      });
+
+      clientFilter.innerHTML = `<option value="all">All Clients</option>`;
+      for (const [key, label] of sortedClients) {
+        const option = document.createElement("option");
+        option.value = key;
+        option.textContent = label;
+        clientFilter.appendChild(option);
+      }
+
+      clientFilter.value = clients.has(selectedValue) || selectedValue === "all" ? selectedValue : "all";
+    }
+
+    function groupRowsByClient(rows) {
+      const groupsByKey = new Map();
+
+      for (const row of rows) {
+        const key = getClientKey(row);
+        if (!groupsByKey.has(key)) {
+          groupsByKey.set(key, {
+            key,
+            label: getClientLabel(row),
+            businessType: row.BusinessType || "",
+            rows: []
+          });
+        }
+
+        groupsByKey.get(key).rows.push(row);
+      }
+
+      return [...groupsByKey.values()].sort((a, b) => {
+        if (a.key === "legacy") return 1;
+        if (b.key === "legacy") return -1;
+        return a.label.localeCompare(b.label);
+      });
+    }
+
+    function getClientKey(row) {
+      return row && row.ClientId ? `client:${String(row.ClientId)}` : "legacy";
+    }
+
+    function getClientLabel(row) {
+      return row && row.ClientId
+        ? (row.BusinessName || "Registered Business")
+        : "Unregistered / Legacy Device";
+    }
+
+    function renderTransferRefBadge(row) {
+      if (!row.ParsedTransferId) {
+        return "";
+      }
+
+      return `<span class="pill">Transfer Ref: TRF-${escapeHtml(row.ParsedTransferId)}</span>`;
+    }
+
+    function renderMatchStatusBadge(row) {
+      const status = String(row.MatchStatus || "").trim();
+      if (!status) {
+        return "";
+      }
+
+      return `<span class="pill match-badge ${escapeHtml(normalizeMatchStatus(status))}">${escapeHtml(status)}</span>`;
+    }
+
+    function renderMobileMoneyInsights(row) {
+      const insightRows = [];
+      const primaryPills = [];
+      const secondaryPills = [];
+
+      if (row.TransactionCode) {
+        primaryPills.push(`<span class="pill">code=${escapeHtml(row.TransactionCode)}</span>`);
+      }
+      if (row.Amount != null) {
+        primaryPills.push(`<span class="pill">amount=${escapeHtml(formatMoney(row.Amount))}</span>`);
+      }
+      if (row.Direction) {
+        primaryPills.push(`<span class="pill">${escapeHtml(row.Direction)}</span>`);
+      }
+      if (row.Provider) {
+        primaryPills.push(`<span class="pill">${escapeHtml(row.Provider)}</span>`);
+      }
+
+      if (row.CounterpartyName) {
+        secondaryPills.push(`<span class="pill">${escapeHtml(row.CounterpartyName)}</span>`);
+      }
+      if (row.CounterpartyPhone) {
+        secondaryPills.push(`<span class="pill">${escapeHtml(row.CounterpartyPhone)}</span>`);
+      }
+      if (row.MatchMethod) {
+        secondaryPills.push(`<span class="pill">method=${escapeHtml(row.MatchMethod)}</span>`);
+      }
+      if (row.MatchCandidateType) {
+        secondaryPills.push(`<span class="pill">candidate=${escapeHtml(row.MatchCandidateType)}</span>`);
+      }
+
+      if (primaryPills.length > 0) {
+        insightRows.push(`<div class="sms-insight-row">${primaryPills.join("")}</div>`);
+      }
+
+      if (secondaryPills.length > 0) {
+        insightRows.push(`<div class="sms-insight-row">${secondaryPills.join("")}</div>`);
+      }
+
+      if (row.ReferenceText) {
+        insightRows.push(`<div class="subtle">Reference: ${escapeHtml(row.ReferenceText)}</div>`);
+      }
+
+      return insightRows.length > 0
+        ? `<div class="sms-insights">${insightRows.join("")}</div>`
+        : "";
+    }
+
+    function normalizeMatchStatus(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function formatMoney(value) {
+      const amount = Number(value || 0);
+      return amount.toLocaleString("en-US");
     }
 
     function showToast(title, message) {
