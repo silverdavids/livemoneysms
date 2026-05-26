@@ -40,6 +40,9 @@ io.use((socket, next) => {
       if (!user) {
         return next(new Error("Authentication required"));
       }
+      if (user.mustChangePassword) {
+        return next(new Error("Password change required"));
+      }
 
       socket.user = user;
       return next();
@@ -53,7 +56,7 @@ io.on("connection", async (socket) => {
   console.log("client connected", socket.id, socket.user.username);
 
   try {
-    const recent = await fetchMessagesForUser(socket.user.userId, 50);
+    const recent = await fetchMessagesForUser(socket.user, 50);
     socket.emit("initial_sms", recent);
     console.log(`sent initial ${recent.length} sms to ${socket.user.username}`);
   } catch (error) {

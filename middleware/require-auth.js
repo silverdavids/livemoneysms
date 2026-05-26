@@ -20,6 +20,19 @@ async function requireAuth(req, res, next) {
   }
 }
 
+function requirePasswordChanged(req, res, next) {
+  if (req.user?.mustChangePassword) {
+    return res.status(403).json({
+      error: "Password change required",
+      code: "PASSWORD_CHANGE_REQUIRED",
+      redirectTo: "/change-password",
+    });
+  }
+
+  return next();
+}
+
 module.exports = {
   requireAuth,
+  requirePasswordChanged,
 };

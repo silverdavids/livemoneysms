@@ -13,6 +13,32 @@ const TRANSACTION_TYPES = new Set([
 ]);
 
 let lastCashflowCreatedOnUtc = null;
+const tableColumnsPromises = new Map();
+
+async function getTableColumns(schemaName, tableName) {
+  const key = `${schemaName}.${tableName}`;
+  if (!tableColumnsPromises.has(key)) {
+    tableColumnsPromises.set(key, (async () => {
+      const request = await createRequest();
+      request.input("schemaName", sql.NVarChar(128), schemaName);
+      request.input("tableName", sql.NVarChar(128), tableName);
+
+      const result = await request.query(`
+        SELECT COLUMN_NAME
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = @schemaName
+          AND TABLE_NAME = @tableName;
+      `);
+
+      return new Set((result.recordset || []).map((row) => row.COLUMN_NAME).filter(Boolean));
+    })().catch((error) => {
+      tableColumnsPromises.delete(key);
+      throw error;
+    }));
+  }
+
+  return tableColumnsPromises.get(key);
+}
 
 function normalizeDateInput(value) {
   const text = String(value || "").trim();
@@ -58,34 +84,40 @@ async function initializeCashflowCursor() {
   console.log("Cashflow cursor initialized from SQL Server time:", lastCashflowCreatedOnUtc);
 }
 
-function appendAccessScope(clauses, request, user) {
+function appendAccessScope(clauses, request, user, columns) {
   if (user.canViewAllDevices) {
     return true;
   }
 
-  const deviceIds = Array.isArray(user.deviceIds)
-    ? user.deviceIds.map((deviceId) => String(deviceId || "").trim()).filter(Boolean)
+  if (!columns.has("ClientId")) {
+    clauses.push("1 = 0");
+    return false;
+  }
+
+  const clientIds = Array.isArray(user.clientIds)
+    ? user.clientIds.map((clientId) => String(clientId || "").trim()).filter(Boolean)
     : [];
 
-  if (deviceIds.length === 0) {
+  if (clientIds.length === 0) {
     clauses.push("1 = 0");
     return false;
   }
 
   const placeholders = [];
-  for (let index = 0; index < deviceIds.length; index += 1) {
-    const name = `AllowedDevice${index}`;
+  for (let index = 0; index < clientIds.length; index += 1) {
+    const name = `AllowedClient${index}`;
     placeholders.push(`@${name}`);
-    request.input(name, sql.NVarChar(200), deviceIds[index]);
+    request.input(name, sql.UniqueIdentifier, clientIds[index]);
   }
 
-  clauses.push(`DeviceId IN (${placeholders.join(", ")})`);
+  clauses.push(`ClientId IN (${placeholders.join(", ")})`);
   return true;
 }
 
-function buildWhereClause(request, user, filters) {
+async function buildWhereClause(request, user, filters) {
+  const columns = await getTableColumns("cashbook", "MobileMoneyTransactions");
   const clauses = ["1 = 1"];
-  appendAccessScope(clauses, request, user);
+  appendAccessScope(clauses, request, user, columns);
 
   if (filters.dateFrom) {
     request.input("dateFrom", sql.Date, filters.dateFrom);
@@ -138,10 +170,12 @@ async function fetchNewCashflowTransactions() {
 
   const request = await createRequest();
   request.input("since", sql.DateTime2, lastCashflowCreatedOnUtc);
+  const columns = await getTableColumns("cashbook", "MobileMoneyTransactions");
 
   const result = await request.query(`
     SELECT TOP (100)
       MobileMoneyTransactionId,
+      ${columns.has("ClientId") ? "ClientId," : ""}
       DeviceId,
       Provider,
       Direction,
@@ -179,14 +213,15 @@ function filterCashflowRowsForUser(rows, user) {
     return rows;
   }
 
-  const allowedDeviceIds = new Set((user.deviceIds || []).map(String));
-  return rows.filter((row) => allowedDeviceIds.has(String(row.DeviceId)));
+  const allowedClientIds = new Set((user.clientIds || []).map(String));
+  return rows.filter((row) => row.ClientId && allowedClientIds.has(String(row.ClientId)));
 }
 
 async function fetchCashflowForUser(user, rawFilters = {}) {
   const filters = normalizeFilters(rawFilters);
   const request = await createRequest();
-  const whereClause = buildWhereClause(request, user, filters);
+  const columns = await getTableColumns("cashbook", "MobileMoneyTransactions");
+  const whereClause = await buildWhereClause(request, user, filters);
   const offset = (filters.page - 1) * filters.pageSize;
 
   request.input("offset", sql.Int, offset);
@@ -214,6 +249,7 @@ async function fetchCashflowForUser(user, rawFilters = {}) {
     SELECT
       MobileMoneyTransactionId,
       ForwardedSmsId,
+      ${columns.has("ClientId") ? "ClientId," : ""}
       DeviceId,
       Provider,
       Direction,

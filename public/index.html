@@ -800,6 +800,10 @@
         }
 
         const data = await response.json();
+        if (data.user?.mustChangePassword) {
+          window.location.href = "/change-password";
+          return;
+        }
         showDashboard(data.user);
       } catch {
         showLogin();
@@ -831,6 +835,10 @@
         }
 
         passwordInput.value = "";
+        if (data.redirectTo || data.user?.mustChangePassword) {
+          window.location.href = data.redirectTo || "/change-password";
+          return;
+        }
         showDashboard(data.user);
       } catch {
         setLoginError("Could not reach the server.");
@@ -887,7 +895,7 @@
       authView.style.display = "none";
       dashboardView.style.display = "block";
       welcomeText.textContent = `Signed in as ${user.name || user.username}. Newest messages appear first.`;
-      deviceScopeEl.textContent = user.canViewAll ? "All" : (user.deviceIds || []).join(", ");
+      deviceScopeEl.textContent = user.canViewAll ? "All" : `${(user.clientIds || []).length} client${(user.clientIds || []).length === 1 ? "" : "s"}`;
       resetMessages();
       connectSocket();
     }

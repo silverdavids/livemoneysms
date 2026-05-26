@@ -1,6 +1,6 @@
 const express = require("express");
 const path = require("path");
-const { requireAuth } = require("../middleware/require-auth");
+const { requireAuth, requirePasswordChanged } = require("../middleware/require-auth");
 const { getSessionUserById } = require("../services/auth-service");
 const { fetchCashflowForUser } = require("../services/cashflow-service");
 
@@ -18,6 +18,9 @@ router.get("/cashflow", async (req, res, next) => {
       req.session?.destroy(() => {});
       return res.redirect("/");
     }
+    if (user.mustChangePassword) {
+      return res.redirect("/change-password");
+    }
 
     return res.sendFile(path.join(__dirname, "..", "public", "cashflow.html"));
   } catch (error) {
@@ -25,7 +28,7 @@ router.get("/cashflow", async (req, res, next) => {
   }
 });
 
-router.get("/api/cashflow", requireAuth, async (req, res, next) => {
+router.get("/api/cashflow", requireAuth, requirePasswordChanged, async (req, res, next) => {
   try {
     const data = await fetchCashflowForUser(req.user, req.query);
     return res.json(data);

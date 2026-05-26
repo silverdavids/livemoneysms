@@ -772,6 +772,10 @@
 
       const meData = await meResponse.json();
       const user = meData.user || {};
+      if (user.mustChangePassword) {
+        window.location.href = "/change-password";
+        return;
+      }
       welcomeText.textContent = `Signed in as ${user.name || user.username || "user"}. Filters stay in place while live updates refresh this view.`;
 
       await loadDevices();
@@ -970,6 +974,13 @@
         if (response.status === 401) {
           window.location.href = "/";
           return;
+        }
+        if (response.status === 403) {
+          const errorData = await response.json().catch(() => ({}));
+          if (errorData.code === "PASSWORD_CHANGE_REQUIRED") {
+            window.location.href = errorData.redirectTo || "/change-password";
+            return;
+          }
         }
 
         if (!response.ok) {

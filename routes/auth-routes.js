@@ -1,6 +1,7 @@
 const express = require("express");
 const {
   authenticateUser,
+  changePassword,
   getSessionUserById,
   toPublicUser,
 } = require("../services/auth-service");
@@ -28,13 +29,23 @@ router.post("/login", async (req, res, next) => {
       }
 
       req.session.userId = user.userId;
+      req.session.user = {
+        userId: user.userId,
+        userName: user.username,
+        fullName: user.fullName,
+        canViewAllDevices: user.canViewAllDevices,
+        mustChangePassword: user.mustChangePassword,
+      };
 
       return req.session.save((saveError) => {
         if (saveError) {
           return next(saveError);
         }
 
-        return res.json({ user: toPublicUser(user) });
+        return res.json({
+          user: toPublicUser(user),
+          redirectTo: user.mustChangePassword ? "/change-password" : null,
+        });
       });
     });
   } catch (error) {
@@ -61,6 +72,40 @@ router.get("/me", requireAuth, async (req, res, next) => {
   try {
     const user = await getSessionUserById(req.user.userId);
     return res.json({ user: toPublicUser(user) });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+router.post("/change-password", requireAuth, async (req, res, next) => {
+  try {
+    const password = String(req.body?.password || "");
+    const confirmPassword = String(req.body?.confirmPassword || "");
+
+    if (password.length < 8) {
+      return res.status(400).json({ error: "Password must be at least 8 characters" });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({ error: "Passwords do not match" });
+    }
+
+    await changePassword(req.user.userId, password);
+    req.session.user = {
+      userId: req.user.userId,
+      userName: req.user.username,
+      fullName: req.user.fullName,
+      canViewAllDevices: req.user.canViewAllDevices,
+      mustChangePassword: false,
+    };
+
+    return req.session.save((saveError) => {
+      if (saveError) {
+        return next(saveError);
+      }
+
+      return res.json({ ok: true });
+    });
   } catch (error) {
     return next(error);
   }

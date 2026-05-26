@@ -54,6 +54,21 @@ function sqlNull(alias, type = "nvarchar(255)") {
   return `CAST(NULL AS ${type}) AS ${alias}`;
 }
 
+function buildClientAccessPlaceholders(request, user) {
+  const clientIds = Array.isArray(user.clientIds)
+    ? user.clientIds.map((clientId) => String(clientId || "").trim()).filter(Boolean)
+    : [];
+
+  const placeholders = [];
+  for (let index = 0; index < clientIds.length; index += 1) {
+    const name = `AllowedClient${index}`;
+    placeholders.push(`@${name}`);
+    request.input(name, sql.UniqueIdentifier, clientIds[index]);
+  }
+
+  return placeholders;
+}
+
 async function fetchMobileMoneyDetailsByForwardedSmsIds(forwardedSmsIds) {
   const ids = [...new Set((forwardedSmsIds || []).map((id) => String(id || "").trim()).filter(Boolean))];
   if (ids.length === 0) {
@@ -298,12 +313,48 @@ async function initializeMessageCursor() {
   console.log("Cursor initialized from SQL Server time:", lastCreatedOnUtc);
 }
 
-async function fetchMessagesForUser(userId, top = 200) {
+async function fetchMessagesForUser(user, top = 200) {
   const request = await createRequest();
-  request.input("UserId", sql.UniqueIdentifier, userId);
   request.input("Top", sql.Int, top);
+  const forwardedSmsColumns = await getTableColumns("sms", "ForwardedSms");
+  const mobileMoneyColumns = await getMobileMoneyColumns();
+  const clauses = ["1 = 1"];
 
-  const result = await request.execute("sms.GetForwardedSmsForUser");
+  if (!user.canViewAllDevices) {
+    const placeholders = buildClientAccessPlaceholders(request, user);
+    if (placeholders.length === 0) {
+      clauses.push("1 = 0");
+    } else if (forwardedSmsColumns.has("ClientId")) {
+      clauses.push(`f.ClientId IN (${placeholders.join(", ")})`);
+    } else if (mobileMoneyColumns.has("ClientId") && mobileMoneyColumns.has("ForwardedSmsId")) {
+      clauses.push(`EXISTS (
+        SELECT 1
+        FROM cashbook.MobileMoneyTransactions t
+        WHERE CONVERT(nvarchar(200), t.ForwardedSmsId) = CONVERT(nvarchar(200), f.ForwardedSmsId)
+          AND t.ClientId IN (${placeholders.join(", ")})
+      )`);
+    } else {
+      clauses.push("1 = 0");
+    }
+  }
+
+  const result = await request.query(`
+    SELECT TOP (@Top)
+      f.ForwardedSmsId,
+      f.DeviceId,
+      ${forwardedSmsColumns.has("ClientId") ? "f.ClientId," : ""}
+      f.[From],
+      f.Body,
+      f.SmsDate,
+      f.ProviderHint,
+      f.CorrelationId,
+      f.BodyHash,
+      f.CreatedOnUtc,
+      f.RawJson
+    FROM sms.ForwardedSms f
+    WHERE ${clauses.join("\n      AND ")}
+    ORDER BY f.CreatedOnUtc DESC;
+  `);
   return enrichMessagesWithMobileMoney(result.recordset || []);
 }
 
@@ -351,8 +402,8 @@ function filterMessagesForUser(rows, user) {
     return rows;
   }
 
-  const allowedDeviceIds = new Set((user.deviceIds || []).map(String));
-  return rows.filter((row) => allowedDeviceIds.has(String(row.DeviceId)));
+  const allowedClientIds = new Set((user.clientIds || []).map(String));
+  return rows.filter((row) => row.ClientId && allowedClientIds.has(String(row.ClientId)));
 }
 
 module.exports = {

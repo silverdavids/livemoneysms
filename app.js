@@ -39,6 +39,14 @@ app.use("/api/user-devices", userDeviceRoutes);
 app.use(cashflowRoutes);
 app.use(matchesRoutes);
 
+app.get("/change-password", (req, res) => {
+  if (!req.session?.userId) {
+    return res.redirect("/");
+  }
+
+  return res.sendFile(path.join(__dirname, "public", "change-password.html"));
+});
+
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use((err, req, res, next) => {

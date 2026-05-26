@@ -1,30 +1,86 @@
 const crypto = require("crypto");
 const { getPool, createRequest, sql } = require("../db");
 
+const tableColumnsPromises = new Map();
+
+async function getTableColumns(schemaName, tableName) {
+  const key = `${schemaName}.${tableName}`;
+  if (!tableColumnsPromises.has(key)) {
+    tableColumnsPromises.set(key, (async () => {
+      const request = await createRequest();
+      request.input("schemaName", sql.NVarChar(128), schemaName);
+      request.input("tableName", sql.NVarChar(128), tableName);
+
+      const result = await request.query(`
+        SELECT COLUMN_NAME
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = @schemaName
+          AND TABLE_NAME = @tableName;
+      `);
+
+      return new Set((result.recordset || []).map((row) => row.COLUMN_NAME).filter(Boolean));
+    })().catch((error) => {
+      tableColumnsPromises.delete(key);
+      throw error;
+    }));
+  }
+
+  return tableColumnsPromises.get(key);
+}
+
+function selectExistingColumn(columns, candidates) {
+  return candidates.find((candidate) => columns.has(candidate)) || null;
+}
+
 async function listDevicesForUser(user) {
   const request = await createRequest();
-  request.input("userId", sql.UniqueIdentifier, user.userId);
-  request.input("canViewAllDevices", sql.Bit, user.canViewAllDevices);
+  const clientDeviceColumns = await getTableColumns("sms", "ClientDevices");
+  const clientColumns = await getTableColumns("sms", "Clients");
+  const clauses = ["1 = 1"];
+
+  if (!user.canViewAllDevices) {
+    const clientIds = Array.isArray(user.clientIds)
+      ? user.clientIds.map((clientId) => String(clientId || "").trim()).filter(Boolean)
+      : [];
+
+    if (clientIds.length === 0 || !clientDeviceColumns.has("ClientId")) {
+      clauses.push("1 = 0");
+    } else {
+      const placeholders = [];
+      for (let index = 0; index < clientIds.length; index += 1) {
+        const name = `AllowedClient${index}`;
+        placeholders.push(`@${name}`);
+        request.input(name, sql.UniqueIdentifier, clientIds[index]);
+      }
+      clauses.push(`cd.ClientId IN (${placeholders.join(", ")})`);
+    }
+  }
+
+  if (clientDeviceColumns.has("IsActive")) {
+    clauses.push("cd.IsActive = 1");
+  }
+
+  const deviceIdColumn = selectExistingColumn(clientDeviceColumns, ["DeviceId", "ForwardingDeviceId", "ClientDeviceId"]);
+  const deviceNameColumn = selectExistingColumn(clientDeviceColumns, ["DeviceName", "Name"]);
+  const descriptionColumn = selectExistingColumn(clientDeviceColumns, ["Description", "DevicePhone", "PhoneNumber", "Phone", "Msisdn", "DeviceMsisdn"]);
+  const createdColumn = selectExistingColumn(clientDeviceColumns, ["CreatedOnUtc", "CreatedAt", "RegisteredOnUtc"]);
+  const clientNameColumn = selectExistingColumn(clientColumns, ["BusinessName", "ClientName", "Name"]);
 
   const result = await request.query(`
     SELECT
-      d.DeviceId,
-      d.DeviceName,
-      d.Description,
-      d.IsActive,
-      d.CreatedOnUtc,
-      CASE WHEN ud.UserDeviceId IS NULL THEN CAST(0 AS bit) ELSE CAST(1 AS bit) END AS IsAssignedToUser
-    FROM sms.Devices d
-    LEFT JOIN sms.UserDevices ud
-      ON ud.DeviceId = d.DeviceId
-     AND ud.UserId = @userId
-     AND ud.IsActive = 1
-    WHERE d.IsActive = 1
-      AND (
-        @canViewAllDevices = 1
-        OR ud.UserDeviceId IS NOT NULL
-      )
-    ORDER BY d.DeviceId;
+      ${deviceIdColumn ? `CONVERT(nvarchar(100), cd.${deviceIdColumn})` : "CAST(NULL AS nvarchar(100))"} AS DeviceId,
+      ${deviceNameColumn ? `cd.${deviceNameColumn}` : "CAST(NULL AS nvarchar(255))"} AS DeviceName,
+      ${descriptionColumn ? `cd.${descriptionColumn}` : "CAST(NULL AS nvarchar(255))"} AS Description,
+      ${clientDeviceColumns.has("IsActive") ? "cd.IsActive" : "CAST(1 AS bit)"} AS IsActive,
+      ${createdColumn ? `cd.${createdColumn}` : "CAST(NULL AS datetime2)"} AS CreatedOnUtc,
+      ${clientDeviceColumns.has("ClientId") ? "cd.ClientId" : "CAST(NULL AS uniqueidentifier)"} AS ClientId,
+      ${clientNameColumn ? `c.${clientNameColumn}` : "CAST(NULL AS nvarchar(255))"} AS BusinessName,
+      CAST(1 AS bit) AS IsAssignedToUser
+    FROM sms.ClientDevices cd
+    LEFT JOIN sms.Clients c
+      ON ${clientDeviceColumns.has("ClientId") && clientColumns.has("ClientId") ? "c.ClientId = cd.ClientId" : "1 = 0"}
+    WHERE ${clauses.join("\n      AND ")}
+    ORDER BY DeviceId;
   `);
 
   return result.recordset || [];

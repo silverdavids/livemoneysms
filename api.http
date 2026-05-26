@@ -12,6 +12,36 @@ Content-Type: {{contentType}}
 }
 
 ###
+# Manual check: smart bet login should normalize to 256708898054 and require password change
+POST {{baseUrl}}/api/login
+Content-Type: {{contentType}}
+
+{
+  "username": "0708898054",
+  "password": "<plain-password-for-the-stored-bcrypt-hash>"
+}
+
+###
+# Manual check: canonical smart bet username should behave the same way
+POST {{baseUrl}}/api/login
+Content-Type: {{contentType}}
+
+{
+  "username": "256708898054",
+  "password": "<plain-password-for-the-stored-bcrypt-hash>"
+}
+
+###
+# Complete forced password change after either smart bet login
+POST {{baseUrl}}/api/change-password
+Content-Type: {{contentType}}
+
+{
+  "password": "<new-password>",
+  "confirmPassword": "<new-password>"
+}
+
+###
 # Current session user
 GET {{baseUrl}}/api/me
 

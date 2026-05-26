@@ -1,11 +1,11 @@
 const express = require("express");
-const { requireAuth } = require("../middleware/require-auth");
+const { requireAuth, requirePasswordChanged } = require("../middleware/require-auth");
 const { requireAdmin } = require("../middleware/require-admin");
 const { upsertUserDeviceAssignment } = require("../services/device-service");
 
 const router = express.Router();
 
-router.post("/", requireAuth, requireAdmin, async (req, res, next) => {
+router.post("/", requireAuth, requirePasswordChanged, requireAdmin, async (req, res, next) => {
   try {
     const userId = String(req.body?.userId || "").trim();
     const deviceId = String(req.body?.deviceId || "").trim();
