@@ -14,6 +14,7 @@ const matchesRoutes = require("./routes/matches-routes");
 const app = express();
 
 app.set("trust proxy", 1);
+app.set("etag", false);
 
 const sessionMiddleware = session({
   name: process.env.SESSION_COOKIE_NAME || "live_sms_session",
