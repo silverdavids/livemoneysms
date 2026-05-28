@@ -389,9 +389,81 @@
       margin: 10px 14px 14px;
     }
 
+    .mobile-header-tools,
+    .mobile-menu,
+    .mobile-menu-backdrop,
+    .mobile-status-line,
     .mobile-bottom-nav,
     .mobile-review-list {
       display: none;
+    }
+
+    .icon-btn {
+      min-height: 36px;
+      min-width: 40px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--text);
+      font-size: 19px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .mobile-menu-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      background: rgba(23, 32, 51, 0.38);
+    }
+
+    .mobile-menu {
+      position: fixed;
+      top: 0;
+      right: 0;
+      z-index: 100;
+      width: min(88vw, 360px);
+      height: 100vh;
+      overflow-y: auto;
+      border-left: 1px solid var(--border);
+      background: var(--panel);
+      box-shadow: -18px 0 36px rgba(23, 32, 51, 0.16);
+      padding: 14px;
+      transform: translateX(100%);
+      transition: transform 0.2s ease;
+    }
+
+    .mobile-menu.open {
+      transform: translateX(0);
+    }
+
+    .mobile-menu-backdrop.open {
+      display: block;
+    }
+
+    .mobile-menu-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .mobile-menu-title {
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .mobile-menu-section {
+      display: grid;
+      gap: 8px;
+      padding: 12px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .mobile-menu-section:first-of-type {
+      border-top: 0;
+      padding-top: 0;
     }
 
     .mobile-review-card {
@@ -537,8 +609,32 @@
         align-items: center;
       }
 
+      .mobile-header-tools,
+      .mobile-status-line {
+        display: flex;
+        align-items: center;
+      }
+
+      .mobile-header-tools {
+        justify-content: flex-end;
+      }
+
+      .mobile-menu {
+        display: block;
+      }
+
+      .mobile-status-line {
+        gap: 6px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        padding: 4px 0;
+      }
+
       .brand .subtle,
       .nav-links,
+      .page-head,
+      .controls,
       .table-wrap {
         display: none;
       }
@@ -557,6 +653,17 @@
         display: grid;
         gap: 9px;
         padding: 10px 10px 14px;
+      }
+
+      .mobile-menu .controls {
+        display: grid;
+        gap: 10px;
+        margin-top: 0;
+      }
+
+      .mobile-menu .status-row {
+        display: grid;
+        gap: 8px;
       }
 
       .mobile-bottom-nav {
@@ -610,7 +717,26 @@
         <a class="nav-link" href="/cashflow">Cashflow</a>
         <a class="nav-link active" href="/matches">Payment Review</a>
       </nav>
+
+      <div class="mobile-header-tools">
+        <button id="mobileMenuButton" class="icon-btn" type="button" aria-label="Open menu" aria-expanded="false">☰</button>
+      </div>
     </header>
+
+    <div id="mobileMenuBackdrop" class="mobile-menu-backdrop"></div>
+    <aside id="mobileMenu" class="mobile-menu" aria-label="Payment Review menu" aria-hidden="true">
+      <div class="mobile-menu-head">
+        <div class="mobile-menu-title">Payment Review Menu</div>
+        <button id="mobileMenuClose" class="icon-btn" type="button" aria-label="Close menu">×</button>
+      </div>
+
+      <div class="mobile-menu-section">
+        <button id="mobileRefreshButton" class="btn primary" type="button">Refresh</button>
+        <button id="mobileLogoutButton" class="btn" type="button">Sign Out</button>
+      </div>
+
+      <div id="mobileControlsSlot" class="mobile-menu-section"></div>
+    </aside>
 
     <section class="page-card">
       <div class="page-head">
@@ -624,7 +750,9 @@
           <button id="logoutButton" class="btn" type="button">Sign Out</button>
         </div>
       </div>
+      <div id="mobileStatusLine" class="mobile-status-line">Live • Updated -</div>
 
+      <div id="controlsDesktopSlot">
       <div class="controls">
         <label>
           Status
@@ -643,6 +771,7 @@
           <div id="liveStatus" class="meta-chip">Auto-refresh: every 15 seconds</div>
           <div id="lastUpdated" class="meta-chip">Last updated: -</div>
         </div>
+      </div>
       </div>
     </section>
 
@@ -693,6 +822,17 @@
   <script>
     const rowsBody = document.getElementById("rowsBody");
     const mobileRows = document.getElementById("mobileRows");
+    const controls = document.querySelector(".controls");
+    const controlsDesktopSlot = document.getElementById("controlsDesktopSlot");
+    const mobileControlsSlot = document.getElementById("mobileControlsSlot");
+    const mobileMenuButton = document.getElementById("mobileMenuButton");
+    const mobileMenuClose = document.getElementById("mobileMenuClose");
+    const mobileMenu = document.getElementById("mobileMenu");
+    const mobileMenuBackdrop = document.getElementById("mobileMenuBackdrop");
+    const mobileRefreshButton = document.getElementById("mobileRefreshButton");
+    const mobileLogoutButton = document.getElementById("mobileLogoutButton");
+    const mobileStatusLine = document.getElementById("mobileStatusLine");
+    const mobileQuery = window.matchMedia("(max-width: 767px)");
     const emptyState = document.getElementById("emptyState");
     const tableWrap = document.getElementById("tableWrap");
     const resultsMeta = document.getElementById("resultsMeta");
@@ -732,36 +872,83 @@
     }
 
     function bindEvents() {
-      statusFilter.addEventListener("change", renderRows);
-
-      document.getElementById("refreshButton").addEventListener("click", async () => {
-        await loadMatches(true);
+      mobileMenuButton.addEventListener("click", openMobileMenu);
+      mobileMenuClose.addEventListener("click", closeMobileMenu);
+      mobileMenuBackdrop.addEventListener("click", closeMobileMenu);
+      mobileQuery.addEventListener("change", handleMobileQueryChange);
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          closeMobileMenu();
+        }
       });
 
-      document.getElementById("logoutButton").addEventListener("click", async () => {
+      statusFilter.addEventListener("change", renderRows);
+
+      document.getElementById("refreshButton").addEventListener("click", refreshMatches);
+      mobileRefreshButton.addEventListener("click", refreshMatches);
+
+      document.getElementById("logoutButton").addEventListener("click", logout);
+      mobileLogoutButton.addEventListener("click", logout);
+
+      async function logout() {
         await fetch("/api/logout", {
           method: "POST",
           credentials: "same-origin"
         }).catch(() => {});
 
         window.location.href = "/";
-      });
+      }
 
       document.addEventListener("visibilitychange", () => {
         if (document.hidden) {
           stopRefreshLoop();
           liveStatus.textContent = "Auto-refresh paused while tab is hidden";
+          updateMobileStatusLine();
           return;
         }
 
         startRefreshLoop();
         loadMatches(false).catch(() => {});
       });
+
+      handleMobileQueryChange();
+    }
+
+    async function refreshMatches() {
+      await loadMatches(true);
+      closeMobileMenu();
+    }
+
+    function openMobileMenu() {
+      if (mobileQuery.matches && controls.parentElement !== mobileControlsSlot) {
+        mobileControlsSlot.appendChild(controls);
+      }
+      mobileMenu.classList.add("open");
+      mobileMenuBackdrop.classList.add("open");
+      mobileMenu.setAttribute("aria-hidden", "false");
+      mobileMenuButton.setAttribute("aria-expanded", "true");
+    }
+
+    function closeMobileMenu() {
+      mobileMenu.classList.remove("open");
+      mobileMenuBackdrop.classList.remove("open");
+      mobileMenu.setAttribute("aria-hidden", "true");
+      mobileMenuButton.setAttribute("aria-expanded", "false");
+    }
+
+    function handleMobileQueryChange() {
+      if (!mobileQuery.matches && controls.parentElement !== controlsDesktopSlot) {
+        controlsDesktopSlot.appendChild(controls);
+      }
+      if (!mobileQuery.matches) {
+        closeMobileMenu();
+      }
     }
 
     function startRefreshLoop() {
       stopRefreshLoop();
       liveStatus.textContent = "Auto-refresh: every 15 seconds";
+      updateMobileStatusLine();
       state.timerId = window.setInterval(() => {
         if (!document.hidden) {
           loadMatches(false).catch(() => {});
@@ -783,6 +970,7 @@
 
       state.loading = true;
       liveStatus.textContent = isManualRefresh ? "Refreshing..." : "Loading latest payment candidates...";
+      updateMobileStatusLine();
 
       try {
         const response = await fetch("/api/matches", {
@@ -814,6 +1002,7 @@
         renderRows();
         lastUpdated.textContent = `Last updated: ${formatTime(state.lastUpdatedAt)}`;
         liveStatus.textContent = "Auto-refresh: every 15 seconds";
+        updateMobileStatusLine();
       } catch (error) {
         rowsBody.innerHTML = "";
         mobileRows.innerHTML = "";
@@ -822,6 +1011,7 @@
         mobileRows.hidden = true;
         resultsMeta.textContent = error.message || "Failed to fetch payment candidates";
         liveStatus.textContent = error.message || "Failed to fetch payment candidates";
+        updateMobileStatusLine();
       } finally {
         state.loading = false;
       }
@@ -976,6 +1166,7 @@
     async function runMatchAction(id, action) {
       const message = action === "confirm" ? "Payment confirmed" : "Payment rejected";
       liveStatus.textContent = action === "confirm" ? "Confirming payment..." : "Rejecting payment...";
+      updateMobileStatusLine();
 
       try {
         const response = await fetch(`/api/matches/${encodeURIComponent(id)}/${action}`, {
@@ -1000,7 +1191,13 @@
       } catch (error) {
         showToast("Action Failed", error.message || `Failed to ${action} payment`);
         liveStatus.textContent = error.message || `Failed to ${action} payment`;
+        updateMobileStatusLine();
       }
+    }
+
+    function updateMobileStatusLine() {
+      const updated = state.lastUpdatedAt ? formatTime(state.lastUpdatedAt) : "-";
+      mobileStatusLine.textContent = `Live • Updated ${updated}`;
     }
 
     function formatAmount(value) {

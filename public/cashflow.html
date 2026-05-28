@@ -465,9 +465,81 @@
       flex-wrap: wrap;
     }
 
+    .mobile-header-tools,
+    .mobile-menu,
+    .mobile-menu-backdrop,
+    .mobile-status-line,
     .mobile-bottom-nav,
     .mobile-transactions {
       display: none;
+    }
+
+    .icon-btn {
+      min-height: 36px;
+      min-width: 40px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--text);
+      font-size: 19px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .mobile-menu-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      background: rgba(23, 32, 51, 0.38);
+    }
+
+    .mobile-menu {
+      position: fixed;
+      top: 0;
+      right: 0;
+      z-index: 100;
+      width: min(88vw, 360px);
+      height: 100vh;
+      overflow-y: auto;
+      border-left: 1px solid var(--border);
+      background: var(--panel);
+      box-shadow: -18px 0 36px rgba(23, 32, 51, 0.16);
+      padding: 14px;
+      transform: translateX(100%);
+      transition: transform 0.2s ease;
+    }
+
+    .mobile-menu.open {
+      transform: translateX(0);
+    }
+
+    .mobile-menu-backdrop.open {
+      display: block;
+    }
+
+    .mobile-menu-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .mobile-menu-title {
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .mobile-menu-section {
+      display: grid;
+      gap: 8px;
+      padding: 12px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .mobile-menu-section:first-of-type {
+      border-top: 0;
+      padding-top: 0;
     }
 
     .mobile-transaction-card {
@@ -614,8 +686,32 @@
         align-items: center;
       }
 
+      .mobile-header-tools,
+      .mobile-status-line {
+        display: flex;
+        align-items: center;
+      }
+
+      .mobile-header-tools {
+        justify-content: flex-end;
+      }
+
+      .mobile-menu {
+        display: block;
+      }
+
+      .mobile-status-line {
+        gap: 6px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        padding: 4px 0;
+      }
+
       .brand .subtle,
       .nav-links,
+      .page-head,
+      .filters-card,
       .table-wrap {
         display: none;
       }
@@ -651,6 +747,24 @@
 
       .filters-card {
         padding: 10px;
+      }
+
+      .mobile-menu .filters-card {
+        display: block;
+        padding: 0;
+        margin: 0;
+        border: 0;
+        box-shadow: none;
+      }
+
+      .mobile-menu .quick-filters,
+      .mobile-menu .advanced-filters {
+        grid-template-columns: 1fr;
+      }
+
+      .mobile-menu .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
       .mobile-transactions {
@@ -726,7 +840,29 @@
         <a class="nav-link" href="/">Live SMS</a>
         <a class="nav-link active" href="/cashflow">Cashflow</a>
       </nav>
+
+      <div class="mobile-header-tools">
+        <button id="mobileMenuButton" class="icon-btn" type="button" aria-label="Open menu" aria-expanded="false">☰</button>
+      </div>
     </header>
+
+    <div id="mobileMenuBackdrop" class="mobile-menu-backdrop"></div>
+    <aside id="mobileMenu" class="mobile-menu" aria-label="Cashflow menu" aria-hidden="true">
+      <div class="mobile-menu-head">
+        <div class="mobile-menu-title">Cashflow Menu</div>
+        <button id="mobileMenuClose" class="icon-btn" type="button" aria-label="Close menu">×</button>
+      </div>
+
+      <div class="mobile-menu-section">
+        <button id="mobileRefreshButton" class="btn" type="button">Refresh</button>
+        <button id="mobileLogoutButton" class="btn" type="button">Sign Out</button>
+      </div>
+
+      <div class="mobile-menu-section">
+        <div id="mobileStatusCopy" class="meta-chip">Live • Updated -</div>
+        <div id="mobileFiltersSlot"></div>
+      </div>
+    </aside>
 
     <section class="page-card">
       <div class="page-head">
@@ -745,6 +881,7 @@
           <button id="logoutButton" class="btn" type="button">Sign Out</button>
         </div>
       </div>
+      <div id="mobileStatusLine" class="mobile-status-line">Live • Updated -</div>
     </section>
 
     <section class="summary-grid" aria-label="Cashflow summary">
@@ -770,6 +907,7 @@
       </div>
     </section>
 
+    <div id="filtersDesktopSlot">
     <form id="filtersForm" class="filters-card">
       <div class="filters-row">
         <div class="quick-filters">
@@ -848,6 +986,7 @@
         </div>
       </details>
     </form>
+    </div>
 
     <section class="table-card">
       <div class="table-head">
@@ -919,6 +1058,17 @@
     };
 
     const filtersForm = document.getElementById("filtersForm");
+    const filtersDesktopSlot = document.getElementById("filtersDesktopSlot");
+    const mobileFiltersSlot = document.getElementById("mobileFiltersSlot");
+    const mobileMenuButton = document.getElementById("mobileMenuButton");
+    const mobileMenuClose = document.getElementById("mobileMenuClose");
+    const mobileMenu = document.getElementById("mobileMenu");
+    const mobileMenuBackdrop = document.getElementById("mobileMenuBackdrop");
+    const mobileRefreshButton = document.getElementById("mobileRefreshButton");
+    const mobileLogoutButton = document.getElementById("mobileLogoutButton");
+    const mobileStatusLine = document.getElementById("mobileStatusLine");
+    const mobileStatusCopy = document.getElementById("mobileStatusCopy");
+    const mobileQuery = window.matchMedia("(max-width: 767px)");
     const rowsBody = document.getElementById("rowsBody");
     const mobileRows = document.getElementById("mobileRows");
     const emptyState = document.getElementById("emptyState");
@@ -970,6 +1120,16 @@
     }
 
     function bindEvents() {
+      mobileMenuButton.addEventListener("click", openMobileMenu);
+      mobileMenuClose.addEventListener("click", closeMobileMenu);
+      mobileMenuBackdrop.addEventListener("click", closeMobileMenu);
+      mobileQuery.addEventListener("change", handleMobileQueryChange);
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          closeMobileMenu();
+        }
+      });
+
       filtersForm.addEventListener("submit", async (event) => {
         event.preventDefault();
         state.page = 1;
@@ -983,9 +1143,8 @@
         await loadCashflow({ reason: "manual", highlightNewRows: false });
       });
 
-      document.getElementById("refreshButton").addEventListener("click", async () => {
-        await loadCashflow({ reason: "manual", highlightNewRows: false });
-      });
+      document.getElementById("refreshButton").addEventListener("click", refreshCashflow);
+      mobileRefreshButton.addEventListener("click", refreshCashflow);
 
       document.getElementById("resetButton").addEventListener("click", async () => {
         filtersForm.reset();
@@ -995,14 +1154,17 @@
         await loadCashflow({ reason: "manual", highlightNewRows: false });
       });
 
-      document.getElementById("logoutButton").addEventListener("click", async () => {
+      document.getElementById("logoutButton").addEventListener("click", logout);
+      mobileLogoutButton.addEventListener("click", logout);
+
+      async function logout() {
         await fetch("/api/logout", {
           method: "POST",
           credentials: "same-origin"
         }).catch(() => {});
 
         window.location.href = "/";
-      });
+      }
 
       prevPageButton.addEventListener("click", async () => {
         if (state.page <= 1 || state.loading) {
@@ -1037,6 +1199,39 @@
         startPolling();
         await loadCashflow({ reason: "resume", highlightNewRows: true });
       });
+
+      handleMobileQueryChange();
+    }
+
+    async function refreshCashflow() {
+      await loadCashflow({ reason: "manual", highlightNewRows: false });
+      closeMobileMenu();
+    }
+
+    function openMobileMenu() {
+      if (mobileQuery.matches && filtersForm.parentElement !== mobileFiltersSlot) {
+        mobileFiltersSlot.appendChild(filtersForm);
+      }
+      mobileMenu.classList.add("open");
+      mobileMenuBackdrop.classList.add("open");
+      mobileMenu.setAttribute("aria-hidden", "false");
+      mobileMenuButton.setAttribute("aria-expanded", "true");
+    }
+
+    function closeMobileMenu() {
+      mobileMenu.classList.remove("open");
+      mobileMenuBackdrop.classList.remove("open");
+      mobileMenu.setAttribute("aria-hidden", "true");
+      mobileMenuButton.setAttribute("aria-expanded", "false");
+    }
+
+    function handleMobileQueryChange() {
+      if (!mobileQuery.matches && filtersForm.parentElement !== filtersDesktopSlot) {
+        filtersDesktopSlot.appendChild(filtersForm);
+      }
+      if (!mobileQuery.matches) {
+        closeMobileMenu();
+      }
     }
 
     function connectRealtime() {
@@ -1362,6 +1557,7 @@
 
     function updateLastUpdated() {
       lastUpdated.textContent = `Last updated: ${state.lastUpdatedAt ? formatTime(state.lastUpdatedAt) : "-"}`;
+      updateMobileStatusLine();
     }
 
     function setLiveState(mode, message) {
@@ -1375,6 +1571,15 @@
             ? "Paused"
             : "Live";
       statusMessage.textContent = message || "";
+      updateMobileStatusLine();
+    }
+
+    function updateMobileStatusLine() {
+      const label = liveState.textContent || "Live";
+      const updated = state.lastUpdatedAt ? formatTime(state.lastUpdatedAt) : "-";
+      const text = `${label} • Updated ${updated}`;
+      mobileStatusLine.textContent = text;
+      mobileStatusCopy.textContent = text;
     }
 
     function renderCounterparty(row) {
