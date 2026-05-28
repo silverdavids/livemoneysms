@@ -83,6 +83,16 @@
       background: #f1f5f7;
     }
 
+    .mobile-header-tools,
+    .mobile-menu,
+    .mobile-menu-backdrop,
+    .mobile-only,
+    .mobile-title,
+    .mobile-sms-summary,
+    .mobile-sms-details {
+      display: none;
+    }
+
     .brand {
       display: flex;
       align-items: center;
@@ -540,6 +550,101 @@
       margin-bottom: 4px;
     }
 
+    .icon-btn {
+      min-height: 40px;
+      min-width: 40px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--text);
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .mobile-menu-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      background: rgba(23, 32, 51, 0.38);
+    }
+
+    .mobile-menu {
+      position: fixed;
+      top: 0;
+      right: 0;
+      z-index: 100;
+      width: min(86vw, 340px);
+      height: 100vh;
+      overflow-y: auto;
+      border-left: 1px solid var(--border);
+      background: var(--panel);
+      box-shadow: -18px 0 36px rgba(23, 32, 51, 0.16);
+      padding: 14px;
+      transform: translateX(100%);
+      transition: transform 0.2s ease;
+    }
+
+    .mobile-menu.open {
+      transform: translateX(0);
+    }
+
+    .mobile-menu-backdrop.open {
+      display: block;
+    }
+
+    .mobile-menu-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .mobile-menu-title {
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .mobile-menu-section {
+      display: grid;
+      gap: 8px;
+      padding: 12px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .mobile-menu-section:first-of-type {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .mobile-menu-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .mobile-menu .topbar-link,
+    .mobile-menu .btn {
+      width: 100%;
+      min-height: 36px;
+      padding: 8px 10px;
+      font-size: 13px;
+    }
+
+    .mobile-info-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .mobile-info-row strong {
+      color: var(--text);
+      text-align: right;
+    }
+
     @media (max-width: 860px) {
       .auth-layout {
         grid-template-columns: 1fr;
@@ -572,9 +677,10 @@
 
       .topbar {
         display: grid;
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
         gap: 8px;
-        margin-bottom: 12px;
+        margin-bottom: 8px;
       }
 
       .brand {
@@ -594,14 +700,60 @@
         line-height: 1.1;
       }
 
+      .desktop-title {
+        display: none;
+      }
+
+      .mobile-title {
+        display: inline;
+      }
+
       .brand .subtle {
         display: none;
       }
 
+      .dashboard-active .mobile-header-tools {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 7px;
+      }
+
+      .mobile-menu {
+        display: block;
+      }
+
+      .mobile-connection {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        min-height: 30px;
+        max-width: 112px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: #fff;
+        color: var(--muted);
+        padding: 5px 7px;
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .mobile-connection span:last-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .mobile-menu-button {
+        min-height: 32px;
+        min-width: 36px;
+        padding: 0;
+        font-size: 19px;
+        line-height: 1;
+      }
+
       .topbar-nav {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
+        display: none;
       }
 
       .topbar-link {
@@ -632,26 +784,12 @@
         padding: 18px;
       }
 
+      .dashboard {
+        padding-top: 0;
+      }
+
       .dashboard-head {
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 10px;
-        align-items: start;
-        padding-bottom: 10px;
-        margin-bottom: 10px;
-      }
-
-      .dashboard-title {
-        gap: 3px;
-        min-width: 0;
-      }
-
-      .dashboard-title h2 {
-        font-size: 18px;
-      }
-
-      .dashboard-title .subtle {
-        font-size: 12px;
-        line-height: 1.35;
+        display: none;
       }
 
       .dashboard-actions {
@@ -700,9 +838,7 @@
       }
 
       .stats {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 8px;
-        margin-bottom: 12px;
+        display: none;
       }
 
       .stat {
@@ -722,22 +858,33 @@
       }
 
       .section-head {
+        align-items: start;
+        flex-direction: row;
         gap: 8px;
         margin-bottom: 8px;
       }
 
       .section-head h3 {
-        font-size: 16px;
+        font-size: 18px;
+        line-height: 1.15;
+      }
+
+      .desktop-only {
+        display: none;
+      }
+
+      .mobile-only {
+        display: inline;
       }
 
       .section-head .subtle {
-        font-size: 12px;
+        font-size: 11px;
+        line-height: 1.3;
+        margin-top: 2px;
       }
 
       .timeline-tools {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
+        display: none;
       }
 
       .filter-group {
@@ -774,12 +921,11 @@
 
       .sms-card {
         border-left-width: 3px;
-        padding: 10px;
+        padding: 8px 9px;
       }
 
       .sms-meta {
-        gap: 5px;
-        margin-bottom: 7px;
+        display: none;
       }
 
       .pill {
@@ -789,18 +935,80 @@
       }
 
       .sms-body {
-        font-size: 13px;
-        line-height: 1.4;
+        display: none;
       }
 
       .sms-insights {
-        gap: 6px;
-        margin-top: 8px;
-        padding-top: 8px;
+        display: none;
       }
 
       .sms-insight-row {
         gap: 5px;
+      }
+
+      .mobile-sms-summary {
+        display: grid;
+        gap: 6px;
+      }
+
+      .mobile-sms-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .mobile-sms-time {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .mobile-sms-amount {
+        color: var(--primary);
+        font-size: 15px;
+        font-weight: 900;
+        text-align: right;
+      }
+
+      .mobile-sms-sender {
+        color: var(--text);
+        font-size: 14px;
+        font-weight: 900;
+        line-height: 1.25;
+        overflow-wrap: anywhere;
+      }
+
+      .mobile-sms-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+
+      .mobile-sms-details {
+        display: block;
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .mobile-sms-details summary {
+        width: fit-content;
+        cursor: pointer;
+        color: var(--accent);
+        font-weight: 900;
+      }
+
+      .mobile-detail-grid {
+        display: grid;
+        gap: 5px;
+        margin-top: 6px;
+        padding-top: 6px;
+        border-top: 1px solid #eef2f6;
+      }
+
+      .mobile-detail-grid div {
+        overflow-wrap: anywhere;
       }
 
       .empty-state {
@@ -817,7 +1025,7 @@
 
     @media (min-width: 521px) and (max-width: 767px) {
       .topbar {
-        grid-template-columns: minmax(0, 1fr) minmax(190px, 240px);
+        grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
       }
     }
@@ -880,7 +1088,7 @@
       <div class="brand">
         <div class="brand-mark">SMS</div>
         <div>
-          <h1>Live Forwarded SMS</h1>
+          <h1><span class="desktop-title">Live Forwarded SMS</span><span class="mobile-title">Live SMS</span></h1>
           <p class="subtle">Secure access for assigned message streams</p>
         </div>
       </div>
@@ -889,6 +1097,14 @@
         <a class="topbar-link" href="/cashflow">Cashflow</a>
         <a class="topbar-link" href="/matches">Matches</a>
       </nav>
+
+      <div class="mobile-header-tools">
+        <div id="mobileSocketIndicator" class="mobile-connection status-bad">
+          <span class="status-dot"></span>
+          <span>Offline</span>
+        </div>
+        <button id="mobileMenuButton" class="icon-btn mobile-menu-button" type="button" aria-label="Open menu" aria-expanded="false">☰</button>
+      </div>
     </header>
 
     <section id="authView" class="auth-layout">
@@ -938,6 +1154,62 @@
     </section>
 
     <section id="dashboardView" class="dashboard">
+      <div id="mobileMenuBackdrop" class="mobile-menu-backdrop"></div>
+      <aside id="mobileMenu" class="mobile-menu" aria-label="Dashboard menu" aria-hidden="true">
+        <div class="mobile-menu-head">
+          <div class="mobile-menu-title">Dashboard Menu</div>
+          <button id="mobileMenuClose" class="icon-btn" type="button" aria-label="Close menu">×</button>
+        </div>
+
+        <div class="mobile-menu-section">
+          <div class="mobile-menu-grid">
+            <a class="topbar-link" href="/cashflow">Cashflow</a>
+            <a class="topbar-link" href="/matches">Matches</a>
+          </div>
+        </div>
+
+        <div class="mobile-menu-section">
+          <button id="mobileEnableNotifications" class="btn secondary" type="button">Enable Alerts</button>
+          <button id="mobileLogoutButton" class="btn secondary" type="button">Sign Out</button>
+        </div>
+
+        <div class="mobile-menu-section">
+          <div class="filter-group">
+            <label for="mobileClientFilter">Client</label>
+            <select id="mobileClientFilter">
+              <option value="all">All Clients</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="mobileMessageFilter">Transfer Monitor</label>
+            <select id="mobileMessageFilter">
+              <option value="incoming-first">Incoming First</option>
+              <option value="all">All</option>
+              <option value="with-transfer-ref">With Transfer Ref</option>
+              <option value="pendingmatch">PendingMatch</option>
+              <option value="paymentreceived">PaymentReceived</option>
+              <option value="needsreview">NeedsReview</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mobile-menu-section">
+          <div class="mobile-info-row">
+            <span>Messages</span>
+            <strong id="mobileTotalSms">0</strong>
+          </div>
+          <div class="mobile-info-row">
+            <span>Devices</span>
+            <strong id="mobileDeviceScope">-</strong>
+          </div>
+          <div class="mobile-info-row">
+            <span>Connection</span>
+            <strong id="mobileSocketStateText">Offline</strong>
+          </div>
+        </div>
+      </aside>
+
       <div class="dashboard-head">
         <div class="dashboard-title">
           <h2>Recent Messages</h2>
@@ -971,8 +1243,8 @@
 
       <div class="section-head">
         <div>
-          <h3>Message Timeline</h3>
-          <p class="subtle">Live updates are filtered by your account.</p>
+          <h3><span class="desktop-only">Message Timeline</span><span class="mobile-only">Incoming Messages</span></h3>
+          <p class="subtle"><span class="desktop-only">Live updates are filtered by your account.</span><span id="mobileAutoStatus" class="mobile-only">Auto-refresh: Offline</span></p>
         </div>
 
         <div class="timeline-tools">
@@ -1022,6 +1294,20 @@
     const toastWrap = document.getElementById("toastWrap");
     const messageFilter = document.getElementById("messageFilter");
     const clientFilter = document.getElementById("clientFilter");
+    const mobileMenuButton = document.getElementById("mobileMenuButton");
+    const mobileMenuClose = document.getElementById("mobileMenuClose");
+    const mobileMenu = document.getElementById("mobileMenu");
+    const mobileMenuBackdrop = document.getElementById("mobileMenuBackdrop");
+    const mobileClientFilter = document.getElementById("mobileClientFilter");
+    const mobileMessageFilter = document.getElementById("mobileMessageFilter");
+    const mobileTotalSms = document.getElementById("mobileTotalSms");
+    const mobileDeviceScope = document.getElementById("mobileDeviceScope");
+    const mobileSocketStateText = document.getElementById("mobileSocketStateText");
+    const mobileSocketIndicator = document.getElementById("mobileSocketIndicator");
+    const mobileAutoStatus = document.getElementById("mobileAutoStatus");
+    const mobileEnableNotifications = document.getElementById("mobileEnableNotifications");
+    const mobileLogoutButton = document.getElementById("mobileLogoutButton");
+    const mobileQuery = window.matchMedia("(max-width: 767px)");
 
     const seen = new Set();
     const rowsById = new Map();
@@ -1037,10 +1323,31 @@
     async function boot() {
       refreshNotifStatus();
       messageFilter.addEventListener("change", () => {
+        mobileMessageFilter.value = messageFilter.value;
         renderMessages();
       });
       clientFilter.addEventListener("change", () => {
+        mobileClientFilter.value = clientFilter.value;
         renderMessages();
+      });
+      mobileMessageFilter.addEventListener("change", () => {
+        messageFilter.value = mobileMessageFilter.value === "incoming-first" ? "all" : mobileMessageFilter.value;
+        renderMessages();
+        closeMobileMenu();
+      });
+      mobileClientFilter.addEventListener("change", () => {
+        clientFilter.value = mobileClientFilter.value;
+        renderMessages();
+        closeMobileMenu();
+      });
+      mobileQuery.addEventListener("change", () => renderMessages());
+      mobileMenuButton.addEventListener("click", openMobileMenu);
+      mobileMenuClose.addEventListener("click", closeMobileMenu);
+      mobileMenuBackdrop.addEventListener("click", closeMobileMenu);
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          closeMobileMenu();
+        }
       });
 
       try {
@@ -1099,7 +1406,10 @@
       }
     });
 
-    document.getElementById("logoutButton").addEventListener("click", async () => {
+    document.getElementById("logoutButton").addEventListener("click", logout);
+    mobileLogoutButton.addEventListener("click", logout);
+
+    async function logout() {
       await fetch("/api/logout", {
         method: "POST",
         credentials: "same-origin"
@@ -1111,9 +1421,13 @@
       }
 
       showLogin();
-    });
+      closeMobileMenu();
+    }
 
-    document.getElementById("enableNotifications").addEventListener("click", async () => {
+    document.getElementById("enableNotifications").addEventListener("click", enableAlerts);
+    mobileEnableNotifications.addEventListener("click", enableAlerts);
+
+    async function enableAlerts() {
       const audioReady = await unlockAudioAlerts(true);
 
       if (!("Notification" in window)) {
@@ -1132,21 +1446,40 @@
       } else {
         showToast("Alerts Partly Enabled", audioReady ? `Sound alerts are ready. Browser notifications: ${permission}` : `Current status: ${permission}`);
       }
-    });
+      closeMobileMenu();
+    }
+
+    function openMobileMenu() {
+      mobileMenu.classList.add("open");
+      mobileMenuBackdrop.classList.add("open");
+      mobileMenu.setAttribute("aria-hidden", "false");
+      mobileMenuButton.setAttribute("aria-expanded", "true");
+    }
+
+    function closeMobileMenu() {
+      mobileMenu.classList.remove("open");
+      mobileMenuBackdrop.classList.remove("open");
+      mobileMenu.setAttribute("aria-hidden", "true");
+      mobileMenuButton.setAttribute("aria-expanded", "false");
+    }
 
     function showLogin() {
+      document.body.classList.remove("dashboard-active");
       authView.style.display = "grid";
       dashboardView.style.display = "none";
+      closeMobileMenu();
       resetMessages();
       setSocketState("Offline", "bad");
       usernameInput.focus();
     }
 
     function showDashboard(user) {
+      document.body.classList.add("dashboard-active");
       authView.style.display = "none";
       dashboardView.style.display = "block";
       welcomeText.textContent = `Signed in as ${user.name || user.username}. Newest messages appear first.`;
       deviceScopeEl.textContent = user.canViewAll ? "All" : `${(user.clientIds || []).length} client${(user.clientIds || []).length === 1 ? "" : "s"}`;
+      mobileDeviceScope.textContent = deviceScopeEl.textContent;
       resetMessages();
       connectSocket();
     }
@@ -1213,11 +1546,16 @@
       initialLoadDone = false;
       list.innerHTML = `<div id="emptyState" class="empty-state">Waiting for messages...</div>`;
       clientFilter.innerHTML = `<option value="all">All Clients</option>`;
+      mobileClientFilter.innerHTML = `<option value="all">All Clients</option>`;
+      mobileClientFilter.value = "all";
+      mobileMessageFilter.value = "incoming-first";
+      messageFilter.value = "all";
       updateTotal();
     }
 
     function updateTotal() {
       totalSmsEl.textContent = seen.size;
+      mobileTotalSms.textContent = seen.size;
       const emptyState = document.getElementById("emptyState");
       if (emptyState) emptyState.style.display = seen.size > 0 ? "none" : "block";
     }
@@ -1225,6 +1563,10 @@
     function setSocketState(label, status) {
       socketStateEl.textContent = label;
       socketStateEl.style.color = status === "ok" ? "#1f7a5c" : status === "warn" ? "#a15c07" : "#b42318";
+      mobileSocketStateText.textContent = label;
+      mobileAutoStatus.textContent = `Auto-refresh: ${label}`;
+      mobileSocketIndicator.className = `mobile-connection status-${status}`;
+      mobileSocketIndicator.innerHTML = `<span class="status-dot"></span><span>${escapeHtml(label)}</span>`;
     }
 
     function setLoginError(message) {
@@ -1342,10 +1684,19 @@
     }
 
     function renderMessages(highlightIds = new Set()) {
-      const visibleRows = orderedIds
+      let visibleRows = orderedIds
         .map((id) => rowsById.get(id))
         .filter(Boolean)
         .filter(matchesActiveFilter);
+
+      if (mobileQuery.matches) {
+        visibleRows = [...visibleRows].sort((a, b) => {
+          const aIncoming = isIncomingMessage(a) ? 0 : 1;
+          const bIncoming = isIncomingMessage(b) ? 0 : 1;
+          if (aIncoming !== bIncoming) return aIncoming - bIncoming;
+          return new Date(b.CreatedOnUtc || 0) - new Date(a.CreatedOnUtc || 0);
+        });
+      }
 
       if (visibleRows.length === 0) {
         list.innerHTML = `<div id="emptyState" class="empty-state">${seen.size > 0 ? "No messages match the selected filters." : "Waiting for messages..."}</div>`;
@@ -1373,6 +1724,7 @@
           div.className = "sms-card";
 
           div.innerHTML = `
+            ${renderMobileSmsSummary(row)}
             <div class="sms-meta">
               <span class="pill">${escapeHtml(formatDate(row.CreatedOnUtc))}</span>
               <span class="pill">${escapeHtml(row.BusinessName || "Unregistered / Legacy Device")}</span>
@@ -1404,12 +1756,21 @@
 
     function matchesActiveFilter(row) {
       const mode = String(messageFilter.value || "all");
+      const mobileMode = String(mobileMessageFilter.value || "incoming-first");
       if (!matchesClientFilter(row)) {
         return false;
       }
 
       const matchStatus = normalizeMatchStatus(row.MatchStatus);
 
+      if (mobileQuery.matches && mobileMode !== "incoming-first") {
+        return matchesTransferMode(row, mobileMode, matchStatus);
+      }
+
+      return matchesTransferMode(row, mode, matchStatus);
+    }
+
+    function matchesTransferMode(row, mode, matchStatus) {
       if (mode === "with-transfer-ref") {
         return Boolean(row.ParsedTransferId);
       }
@@ -1452,14 +1813,21 @@
       });
 
       clientFilter.innerHTML = `<option value="all">All Clients</option>`;
+      mobileClientFilter.innerHTML = `<option value="all">All Clients</option>`;
       for (const [key, label] of sortedClients) {
         const option = document.createElement("option");
         option.value = key;
         option.textContent = label;
         clientFilter.appendChild(option);
+
+        const mobileOption = document.createElement("option");
+        mobileOption.value = key;
+        mobileOption.textContent = label;
+        mobileClientFilter.appendChild(mobileOption);
       }
 
       clientFilter.value = clients.has(selectedValue) || selectedValue === "all" ? selectedValue : "all";
+      mobileClientFilter.value = clientFilter.value;
     }
 
     function groupRowsByClient(rows) {
@@ -1511,6 +1879,56 @@
       }
 
       return `<span class="pill match-badge ${escapeHtml(normalizeMatchStatus(status))}">${escapeHtml(status)}</span>`;
+    }
+
+    function renderMobileSmsSummary(row) {
+      const sender = row.CounterpartyName || row.CounterpartyPhone || row.From || "Unknown sender";
+      const amount = row.Amount != null ? formatMoney(row.Amount) : "";
+      const statusBadge = renderMatchStatusBadge(row);
+      const transferBadge = renderTransferRefBadge(row);
+      const primaryPills = [];
+
+      if (row.TransactionCode) {
+        primaryPills.push(`<span class="pill">code=${escapeHtml(row.TransactionCode)}</span>`);
+      }
+      if (transferBadge) {
+        primaryPills.push(transferBadge);
+      }
+      if (statusBadge) {
+        primaryPills.push(statusBadge);
+      }
+
+      return `
+        <div class="mobile-sms-summary">
+          <div class="mobile-sms-top">
+            <span class="mobile-sms-time">${escapeHtml(formatShortDate(row.CreatedOnUtc))}</span>
+            <span class="mobile-sms-amount">${amount ? escapeHtml(amount) : escapeHtml(row.Direction || "SMS")}</span>
+          </div>
+          <div class="mobile-sms-sender">${escapeHtml(sender)}</div>
+          ${primaryPills.length > 0 ? `<div class="mobile-sms-pills">${primaryPills.join("")}</div>` : ""}
+        </div>
+        ${renderMobileSmsDetails(row)}
+      `;
+    }
+
+    function renderMobileSmsDetails(row) {
+      const details = [];
+
+      if (row.Body) details.push(`<div><strong>Message:</strong> ${escapeHtml(row.Body)}</div>`);
+      if (row.BusinessName) details.push(`<div><strong>Client:</strong> ${escapeHtml(row.BusinessName)}</div>`);
+      if (row.ProviderHint || row.Provider) details.push(`<div><strong>Provider:</strong> ${escapeHtml(row.ProviderHint || row.Provider)}</div>`);
+      if (row.DeviceName || row.DeviceId) details.push(`<div><strong>Device:</strong> ${escapeHtml(row.DeviceName || row.DeviceId)}</div>`);
+      if (row.DevicePhone) details.push(`<div><strong>Device phone:</strong> ${escapeHtml(row.DevicePhone)}</div>`);
+      if (row.From) details.push(`<div><strong>Sender:</strong> ${escapeHtml(row.From)}</div>`);
+      if (row.CounterpartyPhone) details.push(`<div><strong>Phone:</strong> ${escapeHtml(row.CounterpartyPhone)}</div>`);
+      if (row.Method) details.push(`<div><strong>Method:</strong> ${escapeHtml(row.Method)}</div>`);
+      if (row.MatchMethod) details.push(`<div><strong>Match method:</strong> ${escapeHtml(row.MatchMethod)}</div>`);
+      if (row.MatchCandidateType) details.push(`<div><strong>Candidate:</strong> ${escapeHtml(row.MatchCandidateType)}</div>`);
+      if (row.ReferenceText) details.push(`<div><strong>Reference:</strong> ${escapeHtml(row.ReferenceText)}</div>`);
+
+      return details.length > 0
+        ? `<details class="mobile-sms-details"><summary>Details</summary><div class="mobile-detail-grid">${details.join("")}</div></details>`
+        : "";
     }
 
     function renderMobileMoneyInsights(row) {
@@ -1591,6 +2009,30 @@
       if (!value) return "";
       const date = new Date(value);
       return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
+    }
+
+    function formatShortDate(value) {
+      if (!value) return "";
+      const date = new Date(value);
+      return Number.isNaN(date.getTime())
+        ? String(value)
+        : date.toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+    }
+
+    function isIncomingMessage(row) {
+      const direction = String(row.Direction || "").toLowerCase();
+      const status = String(row.MatchStatus || "").toLowerCase();
+      const body = String(row.Body || "").toLowerCase();
+
+      if (direction.includes("out") || direction.includes("sent") || direction.includes("paid")) {
+        return false;
+      }
+
+      if (status.includes("paymentreceived") || status.includes("matched")) {
+        return true;
+      }
+
+      return !/\b(sent|paid|withdrawn|debited)\b/.test(body);
     }
 
     function escapeHtml(value) {
