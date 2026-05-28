@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Payment Matches</title>
+  <title>Payment Review</title>
   <style>
     :root {
       --bg: #f6f8fb;
@@ -389,6 +389,112 @@
       margin: 10px 14px 14px;
     }
 
+    .mobile-bottom-nav,
+    .mobile-review-list {
+      display: none;
+    }
+
+    .mobile-review-card {
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: var(--radius);
+      background: #fff;
+      padding: 10px;
+      box-shadow: 0 8px 18px rgba(23, 32, 51, 0.05);
+    }
+
+    .mobile-card-top,
+    .mobile-card-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .mobile-card-top {
+      margin-bottom: 8px;
+    }
+
+    .mobile-transfer-id {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      overflow-wrap: anywhere;
+    }
+
+    .mobile-card-amount {
+      color: var(--primary);
+      font-size: 16px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .mobile-card-main {
+      display: grid;
+      gap: 6px;
+    }
+
+    .mobile-card-person {
+      font-size: 14px;
+      font-weight: 900;
+      overflow-wrap: anywhere;
+    }
+
+    .mobile-card-row {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .mobile-card-row strong {
+      color: var(--text);
+      text-align: right;
+      overflow-wrap: anywhere;
+    }
+
+    .mobile-card-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #eef2f6;
+    }
+
+    .mobile-card-actions .btn {
+      width: 100%;
+    }
+
+    .mobile-card-actions .action-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      width: 100%;
+    }
+
+    .mobile-card-details {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .mobile-card-details summary {
+      width: fit-content;
+      cursor: pointer;
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    .mobile-card-detail-grid {
+      display: grid;
+      gap: 5px;
+      margin-top: 7px;
+      padding-top: 7px;
+      border-top: 1px solid #eef2f6;
+      overflow-wrap: anywhere;
+    }
+
     @media (max-width: 840px) {
       .shell {
         width: min(100% - 18px, 1240px);
@@ -416,6 +522,76 @@
         width: 100%;
       }
     }
+
+    @media (max-width: 767px) {
+      body {
+        border-top-width: 3px;
+      }
+
+      .shell {
+        padding-bottom: 86px;
+      }
+
+      .topbar {
+        flex-direction: row;
+        align-items: center;
+      }
+
+      .brand .subtle,
+      .nav-links,
+      .table-wrap {
+        display: none;
+      }
+
+      .page-card,
+      .table-card {
+        box-shadow: none;
+      }
+
+      .controls,
+      .status-row {
+        gap: 8px;
+      }
+
+      .mobile-review-list {
+        display: grid;
+        gap: 9px;
+        padding: 10px 10px 14px;
+      }
+
+      .mobile-bottom-nav {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 80;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+        border-top: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.96);
+        padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+        box-shadow: 0 -10px 24px rgba(23, 32, 51, 0.1);
+      }
+
+      .mobile-bottom-link {
+        min-height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid transparent;
+        border-radius: var(--radius);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .mobile-bottom-link.active {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: #fff;
+      }
+    }
   </style>
 </head>
 <body>
@@ -424,23 +600,23 @@
       <div class="brand">
         <div class="brand-mark">SMS</div>
         <div>
-          <h1>Payment Matches</h1>
-          <p class="subtle">Read-only collection and payment match candidates from MobileMoneyApi.</p>
+          <h1>Payment Review</h1>
+          <p class="subtle">Confirm and reject payment candidates from MobileMoneyApi.</p>
         </div>
       </div>
 
       <nav class="nav-links">
         <a class="nav-link" href="/">Live SMS</a>
         <a class="nav-link" href="/cashflow">Cashflow</a>
-        <a class="nav-link active" href="/matches">Matches</a>
+        <a class="nav-link active" href="/matches">Payment Review</a>
       </nav>
     </header>
 
     <section class="page-card">
       <div class="page-head">
         <div>
-          <h2>Payment Matches</h2>
-          <p id="welcomeText" class="subtle">Loading match candidates...</p>
+          <h2>Payment Review</h2>
+          <p id="welcomeText" class="subtle">Loading payment candidates...</p>
         </div>
 
         <div class="page-actions">
@@ -478,7 +654,7 @@
         </div>
       </div>
 
-      <div id="emptyState" class="empty-state" hidden>No payment match candidates found.</div>
+      <div id="emptyState" class="empty-state" hidden>No payment candidates found.</div>
 
       <div id="tableWrap" class="table-wrap">
         <table>
@@ -502,13 +678,21 @@
           <tbody id="rowsBody"></tbody>
         </table>
       </div>
+      <div id="mobileRows" class="mobile-review-list"></div>
     </section>
   </main>
+
+  <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+    <a class="mobile-bottom-link" href="/">Home</a>
+    <a class="mobile-bottom-link" href="/cashflow">Cashflow</a>
+    <a class="mobile-bottom-link active" href="/matches">Payment Review</a>
+  </nav>
 
   <div id="toastWrap" class="toast-wrap"></div>
 
   <script>
     const rowsBody = document.getElementById("rowsBody");
+    const mobileRows = document.getElementById("mobileRows");
     const emptyState = document.getElementById("emptyState");
     const tableWrap = document.getElementById("tableWrap");
     const resultsMeta = document.getElementById("resultsMeta");
@@ -540,7 +724,7 @@
         window.location.href = "/change-password";
         return;
       }
-      welcomeText.textContent = `Signed in as ${user.name || user.username || "user"}. Newest payment matches appear first.`;
+      welcomeText.textContent = `Signed in as ${user.name || user.username || "user"}. Newest payment candidates appear first.`;
 
       bindEvents();
       startRefreshLoop();
@@ -598,7 +782,7 @@
       }
 
       state.loading = true;
-      liveStatus.textContent = isManualRefresh ? "Refreshing..." : "Loading latest matches...";
+      liveStatus.textContent = isManualRefresh ? "Refreshing..." : "Loading latest payment candidates...";
 
       try {
         const response = await fetch("/api/matches", {
@@ -618,7 +802,7 @@
         }
 
         if (!response.ok) {
-          throw new Error("Failed to fetch matches");
+          throw new Error("Failed to fetch payment candidates");
         }
 
         const data = await response.json();
@@ -632,10 +816,12 @@
         liveStatus.textContent = "Auto-refresh: every 15 seconds";
       } catch (error) {
         rowsBody.innerHTML = "";
+        mobileRows.innerHTML = "";
         emptyState.hidden = false;
         tableWrap.hidden = true;
-        resultsMeta.textContent = error.message || "Failed to fetch matches";
-        liveStatus.textContent = error.message || "Failed to fetch matches";
+        mobileRows.hidden = true;
+        resultsMeta.textContent = error.message || "Failed to fetch payment candidates";
+        liveStatus.textContent = error.message || "Failed to fetch payment candidates";
       } finally {
         state.loading = false;
       }
@@ -666,18 +852,21 @@
       const rows = state.rows.filter((row) => !status || String(row.matchStatus || "") === status);
 
       rowsBody.innerHTML = "";
+      mobileRows.innerHTML = "";
 
       if (rows.length === 0) {
         emptyState.hidden = false;
         tableWrap.hidden = true;
+        mobileRows.hidden = true;
         resultsMeta.textContent = status
-          ? `No payment match candidates found for status ${status}.`
-          : "No payment match candidates found.";
+          ? `No payment candidates found for status ${status}.`
+          : "No payment candidates found.";
         return;
       }
 
       emptyState.hidden = true;
       tableWrap.hidden = false;
+      mobileRows.hidden = false;
 
       for (const row of rows) {
         const tr = document.createElement("tr");
@@ -697,9 +886,10 @@
           <td class="action-cell">${renderActionButtons(row)}</td>
         `;
         rowsBody.appendChild(tr);
+        mobileRows.insertAdjacentHTML("beforeend", renderMobileReviewCard(row));
       }
 
-      for (const button of rowsBody.querySelectorAll("[data-action][data-id]")) {
+      for (const button of document.querySelectorAll("[data-action][data-id]")) {
         button.addEventListener("click", async () => {
           if (state.loading) {
             return;
@@ -710,7 +900,52 @@
         });
       }
 
-      resultsMeta.textContent = `Showing ${rows.length.toLocaleString("en-US")} match candidate${rows.length === 1 ? "" : "s"}.`;
+      resultsMeta.textContent = `Showing ${rows.length.toLocaleString("en-US")} payment candidate${rows.length === 1 ? "" : "s"}.`;
+    }
+
+    function renderMobileReviewCard(row) {
+      const sender = row.senderName || row.senderPhone || row.cashierPhone || "Unknown sender";
+      const details = [];
+      const expectedAmount = formatNullableAmount(row.expectedAmount ?? "-");
+      const difference = formatNullableAmount(row.amountDifference ?? "-");
+
+      if (row.createdOnUtc) details.push(`<div><strong>Created:</strong> ${escapeHtml(formatDate(row.createdOnUtc))}</div>`);
+      if (expectedAmount !== "-") details.push(`<div><strong>Expected:</strong> ${escapeHtml(expectedAmount)}</div>`);
+      if (difference !== "-") details.push(`<div><strong>Difference:</strong> ${escapeHtml(difference)}</div>`);
+      if (row.branchName) details.push(`<div><strong>Branch:</strong> ${escapeHtml(row.branchName)}</div>`);
+      if (row.cashierAlias) details.push(`<div><strong>Cashier:</strong> ${escapeHtml(row.cashierAlias)}</div>`);
+      if (row.cashierPhone) details.push(`<div><strong>Cashier phone:</strong> ${escapeHtml(row.cashierPhone)}</div>`);
+
+      return `
+        <article class="mobile-review-card">
+          <div class="mobile-card-top">
+            <span class="mobile-transfer-id">${escapeHtml(row.externalTransferId || "Transfer")}</span>
+            <span class="mobile-card-amount">${escapeHtml(formatAmount(row.receivedAmount))}</span>
+          </div>
+          <div class="mobile-card-main">
+            <div class="mobile-card-person">${escapeHtml(sender)}</div>
+            <div class="mobile-card-row">
+              <span>Code</span>
+              <strong>${escapeHtml(row.transactionCode || "-")}</strong>
+            </div>
+            <div class="mobile-card-row">
+              <span>Status / Score</span>
+              <strong>${renderStatusBadge(row.matchStatus)} ${escapeHtml(formatScore(row.matchScore))}</strong>
+            </div>
+            <div class="mobile-card-row">
+              <span>Reason</span>
+              <strong>${escapeHtml(row.matchReason || "-")}</strong>
+            </div>
+          </div>
+          ${details.length ? `
+            <details class="mobile-card-details">
+              <summary>Details</summary>
+              <div class="mobile-card-detail-grid">${details.join("")}</div>
+            </details>
+          ` : ""}
+          <div class="mobile-card-actions">${renderActionButtons(row)}</div>
+        </article>
+      `;
     }
 
     function renderStatusBadge(status) {
@@ -763,8 +998,8 @@
           : "The payment match was marked as rejected.");
         await loadMatches(false);
       } catch (error) {
-        showToast("Action Failed", error.message || `Failed to ${action} match`);
-        liveStatus.textContent = error.message || `Failed to ${action} match`;
+        showToast("Action Failed", error.message || `Failed to ${action} payment`);
+        liveStatus.textContent = error.message || `Failed to ${action} payment`;
       }
     }
 

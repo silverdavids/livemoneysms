@@ -88,6 +88,7 @@
     .mobile-menu-backdrop,
     .mobile-only,
     .mobile-title,
+    .mobile-bottom-nav,
     .mobile-sms-summary,
     .mobile-sms-details {
       display: none;
@@ -672,7 +673,7 @@
 
       .shell {
         width: min(100% - 20px, 1120px);
-        padding: 12px 0 24px;
+        padding: 12px 0 86px;
       }
 
       .topbar {
@@ -721,6 +722,40 @@
 
       .mobile-menu {
         display: block;
+      }
+
+      .mobile-bottom-nav {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 80;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+        border-top: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.96);
+        padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+        box-shadow: 0 -10px 24px rgba(23, 32, 51, 0.1);
+      }
+
+      .mobile-bottom-link {
+        min-height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid transparent;
+        border-radius: var(--radius);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 900;
+        text-decoration: none;
+      }
+
+      .mobile-bottom-link.active {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: #fff;
       }
 
       .mobile-connection {
@@ -1095,7 +1130,7 @@
 
       <nav class="topbar-nav">
         <a class="topbar-link" href="/cashflow">Cashflow</a>
-        <a class="topbar-link" href="/matches">Matches</a>
+        <a class="topbar-link" href="/matches">Payment Review</a>
       </nav>
 
       <div class="mobile-header-tools">
@@ -1164,7 +1199,7 @@
         <div class="mobile-menu-section">
           <div class="mobile-menu-grid">
             <a class="topbar-link" href="/cashflow">Cashflow</a>
-            <a class="topbar-link" href="/matches">Matches</a>
+            <a class="topbar-link" href="/matches">Payment Review</a>
           </div>
         </div>
 
@@ -1273,6 +1308,12 @@
       </div>
     </section>
   </main>
+
+  <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+    <a class="mobile-bottom-link active" href="/">Home</a>
+    <a class="mobile-bottom-link" href="/cashflow">Cashflow</a>
+    <a class="mobile-bottom-link" href="/matches">Payment Review</a>
+  </nav>
 
   <div id="toastWrap" class="toast-wrap"></div>
 

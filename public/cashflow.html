@@ -465,6 +465,88 @@
       flex-wrap: wrap;
     }
 
+    .mobile-bottom-nav,
+    .mobile-transactions {
+      display: none;
+    }
+
+    .mobile-transaction-card {
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: var(--radius);
+      background: #fff;
+      padding: 10px;
+      box-shadow: 0 8px 18px rgba(23, 32, 51, 0.05);
+    }
+
+    .mobile-card-top,
+    .mobile-card-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .mobile-card-top {
+      margin-bottom: 8px;
+    }
+
+    .mobile-card-time {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .mobile-card-amount {
+      color: var(--primary);
+      font-size: 16px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .mobile-card-main {
+      display: grid;
+      gap: 6px;
+    }
+
+    .mobile-card-person {
+      font-size: 14px;
+      font-weight: 900;
+      overflow-wrap: anywhere;
+    }
+
+    .mobile-card-row {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .mobile-card-row strong {
+      color: var(--text);
+      text-align: right;
+      overflow-wrap: anywhere;
+    }
+
+    .mobile-card-details {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .mobile-card-details summary {
+      width: fit-content;
+    }
+
+    .mobile-card-detail-grid {
+      display: grid;
+      gap: 5px;
+      margin-top: 7px;
+      padding-top: 7px;
+      border-top: 1px solid #eef2f6;
+      overflow-wrap: anywhere;
+    }
+
     @media (max-width: 1100px) {
       .summary-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -515,6 +597,99 @@
 
       .table-wrap {
         max-height: calc(100vh - 330px);
+      }
+    }
+
+    @media (max-width: 767px) {
+      body {
+        border-top-width: 3px;
+      }
+
+      .shell {
+        padding-bottom: 86px;
+      }
+
+      .topbar {
+        flex-direction: row;
+        align-items: center;
+      }
+
+      .brand .subtle,
+      .nav-links,
+      .table-wrap {
+        display: none;
+      }
+
+      .page-card,
+      .filters-card,
+      .table-card {
+        box-shadow: none;
+      }
+
+      .page-head,
+      .table-head,
+      .pagination {
+        gap: 8px;
+      }
+
+      .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .summary-card {
+        padding: 9px 10px;
+      }
+
+      .summary-label {
+        font-size: 10px;
+        margin-bottom: 4px;
+      }
+
+      .summary-value {
+        font-size: 16px;
+      }
+
+      .filters-card {
+        padding: 10px;
+      }
+
+      .mobile-transactions {
+        display: grid;
+        gap: 9px;
+        padding: 10px 10px 0;
+      }
+
+      .mobile-bottom-nav {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 80;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+        border-top: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.96);
+        padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+        box-shadow: 0 -10px 24px rgba(23, 32, 51, 0.1);
+      }
+
+      .mobile-bottom-link {
+        min-height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid transparent;
+        border-radius: var(--radius);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .mobile-bottom-link.active {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: #fff;
       }
     }
 
@@ -707,6 +882,8 @@
         </table>
       </div>
 
+      <div id="mobileRows" class="mobile-transactions"></div>
+
       <div class="pagination">
         <div id="paginationInfo" class="subtle">Page 1</div>
         <div class="pager-buttons">
@@ -716,6 +893,12 @@
       </div>
     </section>
   </main>
+
+  <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+    <a class="mobile-bottom-link" href="/">Home</a>
+    <a class="mobile-bottom-link active" href="/cashflow">Cashflow</a>
+    <a class="mobile-bottom-link" href="/matches">Payment Review</a>
+  </nav>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
@@ -737,6 +920,7 @@
 
     const filtersForm = document.getElementById("filtersForm");
     const rowsBody = document.getElementById("rowsBody");
+    const mobileRows = document.getElementById("mobileRows");
     const emptyState = document.getElementById("emptyState");
     const tableWrap = document.getElementById("tableWrap");
     const resultsMeta = document.getElementById("resultsMeta");
@@ -1051,16 +1235,19 @@
 
     function renderRows(rows, newIds) {
       rowsBody.innerHTML = "";
+      mobileRows.innerHTML = "";
 
       if (!rows.length) {
         emptyState.hidden = false;
         tableWrap.hidden = true;
+        mobileRows.hidden = true;
         resultsMeta.textContent = "No mobile money transactions found for the selected filters.";
         return;
       }
 
       emptyState.hidden = true;
       tableWrap.hidden = false;
+      mobileRows.hidden = false;
 
       for (const row of rows) {
         const rowId = String(row.MobileMoneyTransactionId || row.ForwardedSmsId || Math.random());
@@ -1095,6 +1282,7 @@
           </td>
         `;
         rowsBody.appendChild(rawRow);
+        mobileRows.insertAdjacentHTML("beforeend", renderMobileTransactionCard(row));
 
         if (newIds.has(rowId)) {
           window.setTimeout(() => tr.classList.remove("highlight-new"), 2500);
@@ -1117,6 +1305,51 @@
       const start = ((state.page - 1) * state.pageSize) + 1;
       const end = start + rows.length - 1;
       resultsMeta.textContent = `Showing ${formatCount(start)}-${formatCount(end)} of ${formatCount(state.totalRows)} transactions.`;
+    }
+
+    function renderMobileTransactionCard(row) {
+      const counterparty = row.CounterpartyName || row.CounterpartyPhone || "Unknown sender";
+      const balance = row.Balance == null ? "" : formatCurrency(row.Balance);
+      const detailRows = [];
+
+      if (row.Provider) detailRows.push(`<div><strong>Provider:</strong> ${escapeHtml(row.Provider)}</div>`);
+      if (row.Fee != null) detailRows.push(`<div><strong>Fee:</strong> ${escapeHtml(formatCurrency(row.Fee))}</div>`);
+      if (row.Tax != null) detailRows.push(`<div><strong>Tax:</strong> ${escapeHtml(formatCurrency(row.Tax))}</div>`);
+      if (row.Reason) detailRows.push(`<div><strong>Reason:</strong> ${escapeHtml(row.Reason)}</div>`);
+      if (row.DeviceId) detailRows.push(`<div><strong>Device:</strong> ${escapeHtml(row.DeviceId)}</div>`);
+      if (row.RawBody) detailRows.push(`<div><strong>SMS:</strong> ${escapeHtml(row.RawBody)}</div>`);
+
+      return `
+        <article class="mobile-transaction-card">
+          <div class="mobile-card-top">
+            <span class="mobile-card-time">${escapeHtml(formatDate(row.SmsDate))}</span>
+            <span class="mobile-card-amount">${escapeHtml(formatCurrency(row.Amount))}</span>
+          </div>
+          <div class="mobile-card-main">
+            <div class="mobile-card-row">
+              <span>${renderDirectionBadge(row.Direction)} ${renderTransactionTypeBadge(row.TransactionType)}</span>
+              ${balance ? `<strong>${escapeHtml(balance)}</strong>` : ""}
+            </div>
+            <div class="mobile-card-person">${escapeHtml(counterparty)}</div>
+            <div class="mobile-card-row">
+              <span>Code</span>
+              <strong>${escapeHtml(row.TransactionCode || "-")}</strong>
+            </div>
+            ${row.CounterpartyPhone && row.CounterpartyName ? `
+              <div class="mobile-card-row">
+                <span>Phone</span>
+                <strong>${escapeHtml(row.CounterpartyPhone)}</strong>
+              </div>
+            ` : ""}
+          </div>
+          ${detailRows.length ? `
+            <details class="mobile-card-details">
+              <summary>Details</summary>
+              <div class="mobile-card-detail-grid">${detailRows.join("")}</div>
+            </details>
+          ` : ""}
+        </article>
+      `;
     }
 
     function renderPagination() {
